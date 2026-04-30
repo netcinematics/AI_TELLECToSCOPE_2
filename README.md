@@ -257,3 +257,64 @@ This is a Design Session around AXIOMZ. Lets discuss AXIOMATIC_THEORY! So the mo
 ______________________
 
 AXIOMATIC TABLE of CONCEPTS - like periodic table of elements, but CONCEPTUAL. AXIOMATIC_PRINCIPLE: If we had "BITZ" of TEXT, to "best_reflect_actual_reality" - what would it say? To generate, such PRISTINE_TXT - is to COLLECT_AXIOMZ! This paper describes a NOVEL APPROACH to innovate AI by INNOVATE_the_INPUTS. And scientific practice to "exactify" concepts, and unlock actual_extra_ability, with actual_extra_vocabulary.
+
+
+_____________________________
+
+MANIFOLD DESIGN
+
+MANIFOLD_LEGEND
+NEBULA
+Fluid macro-event genesis state.
+CLUSTER
+Rigid truth lattice. Primary conceptual truths.
+FOG
+Ambiguous probabilistic region.
+WIREFRAME
+Structural boundary without mass.
+GLASS
+Transparent stable standard flow.
+ATOMZ
+Dynamic energetic subsystems.
+SPHEROID
+Dense, unbreakable conceptual node.
+
+_________________________________
+
+MANIFOLD_LEGEND (v2)
+
+CLOUD_FAMILY:
+
+DARK_NEBULA - COLD_CLOUD:
+Obscure macro-event genesis state.
+
+SPARK_NEBULA - HOT_CLOUD:
+Highly charged probabilistic point-cloud.
+
+FOGZ - FOG_CLOUD:
+Ambiguous probabilistic region.
+
+
+ATOMZ
+Dynamic energetic subsystems.
+
+SPHEROID_MOONZ
+Dense, unbreakable conceptual node.
+
+
+GLASS_NUCLEUS:
+Transparent standard flow with solid sub-states.
+
+HOLO_CORE  - WIRED_CORE:
+Dense core bounded by rigid wireframe structure. aLIMITZa.
+
+
+HOLOZ:
+HOLOZ_TETRA - Tetrahedron: 
+Foundational base connection point.
+HOLOZ_OCTA - Octahedron:
+Dual-pole conceptual state geometry.
+HOLOZ_ICOSA - Icosahedron:
+Complex, multi-faceted truth lattice.
+HOLOZ_DODECA - Dodecahedron: 
+Complete metacognitive boundary node.
