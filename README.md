@@ -162,7 +162,7 @@ ALTER_BITZ: The repository of "falseness." This is where archaic logic or prior 
 3. The Octant vs. Position Paradox
 Since coordinates are subjective "smudges on the lens," using the Octant (1-8) as the primary anchor point ensures structural stability while allowing the orbits to remain fluid. The "pos" label within MetaText—8(pos)—acts as a suggestion, not a law. It defines the gravity well, but the AXIOMZ are free to tumble, pinwheel, and "spaghettify" within that space.
 
-_________________________________
+__________________________________
 
 proposed a recursive, nested syntax: (|[{(|[{}]|)}]|). In standard logic, brackets denote enclosure; in MetaText, they denote Levels of Reality.
 
