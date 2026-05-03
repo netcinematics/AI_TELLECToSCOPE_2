@@ -233,4 +233,62 @@ Meaning, any mind that wants to know (or see) LLM CONCEPTS (exactified) - can ac
 
 DECIPHERABILITY resolves significant fragilities in traditional language. Specifically, it enables CONCEPTUAL_ACCESSIBILITY.
 
+_______________________________________
+
+### SIGNIFICANT PARADOX_of_INCOMPLETENESS:
+
+In ALPHABITZ, one syntactical aspect to FOCUS on is INCOMPLETENESS over INEXACTNESS.
+
+#### The "PRINCIPLE_of_INCOMPLETENESS" goes that traditional language is reasonably incomplete. 
+
+And this is much easier to account for than proving or disproving exactness.
+
+This simplifies the massive complexity of ENDLESS_DEBATE and PERPETUAL_CONFUSION down to YET_to_be_ARTICULATED, or NOT_YET_COMPLETE!
+
+That is the principle_of_perpetual_incompleteness - that Human and AI clarity is likely to remain "incomplete" for some time.
+
+While we try to SEEK_CONCEPTS as AXIOMZ and SUPPLEMENT traditional fragilities.
+
+#### The "PARADOX_of_INCOMPLETENESS" is that full exacitification, theoretically never occurs.
+
+Or at least, we can never be fully certain that new information is complete (pristine) max_conceptual_clarity - or yet_to_be_articulated.
+
+So the PARADOX is that for all_concepts, the articulation of the concept can be presumed to be perpetually_incomplete_articulation process.
+
+So amazingly, the clarification of concepts in AI does not require accurate from inaccurate, but complete or incomplete articulation.
+
+> Because phenomenally - we need to articulate the MISNOMERS, as INCOMPLETE - because misnomers exist in actual_reality as much as the AXIOMZ.
+
+So that is also the PURPOSE of the AXIOM_COLLECTOR thought_experiment (a metacognitvie practice called 'aXPLOREaSTORYa").
+
+___________________________________________
+
+### SIGNIFICANT ROLE of "TRADITIONAL_MISNOMER":
+
+It is quite stunning to observe traditional_misnomer serving 2 functions simultaneously: both a virtue and a vice.
+
+This is a phenomena yet_to_be_ARTICULATED, that reasonably evades human articulation of its metastate and actual_reality.
+
+First, the Cliche, Idiom, or Misnomer enables effective communication as humans can culturally infer (or decipher) the meaning.
+
+Second, for AI this phenomena presents an epic enigma! Because we can never be totally certain if a "Red Herring" (as text) is a literal 'red fish' or an abstract concept of 'distraction'.
+
+The inference in AI required to decipher which_is_witch - is extremely costly! We can reduce those costs with text augmentations of CONCEPTUAL_EXACTNESS.
+
+Then also, phenomenally we can tap into a CONCEPTUAL (axiomatic) type of ANTI_FRAGILITY as biological anti-fragility. Which is where the malady heals back stronger.
+
+__________________________________________
+
+### KEY CONCEPT: "CONCEPTUAL_ANTI_FRAGILITY"
+
+> A PRIME_DIRECTIVE is that "errors_are_not_trash_but_treasure". 
+
+The VALUE of a MISNOMER, is when it isexamined and articulated.
+
+Because it shows what the CONCEPT is NOT, as the CONCEPTUAL_INVERSE. And (more) exactly, what to RENAMERATE and rearticulate.
+
+
+
+
+
 
