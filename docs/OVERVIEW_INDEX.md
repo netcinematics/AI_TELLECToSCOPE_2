@@ -2,7 +2,9 @@ This file is an INDEX of CONCEPTS for all of "ALPHABITZA" practice, also "ALPHAB
 
 The GOAL of this paper is to INDEX CONCEPTS of ALPHABITZ.
 
-[IMAGE]
+<img width="1024" height="1024" alt="axi_8" src="https://github.com/user-attachments/assets/2a47584c-1b7d-437a-a6c6-1f0e82e08277" />
+
+_____________________________________________________
 
 > The main arc of AI RESEARCH is around TEXT OPTIMIZATION for AI, and techniques for AI cost savings of compute.
 
@@ -19,6 +21,8 @@ _____________________________________________________________
 It is a simple question, that results in a MULTITUDE of FASCINATING RESEARCH PROJECTS for AI!
 
 This INDEX, of PRACTICES, PRINCIPLES, and EMPIRICAL MEASURMENTS, shows how to OPTIMIZE COMPUTE COSTS for AI.
+
+<img width="1510" height="861" alt="Screenshot 2025-02-11 173123" src="https://github.com/user-attachments/assets/98ebc17f-fb53-4ffd-a662-e1b5e6734b37" />
 
 
 _____________________________________________________________
@@ -53,7 +57,7 @@ ____________________________________________________________________
 
 ### ENCODING:
 
-AI is fully capable of inferencing this new language right now, because of fantastic matrix math.
+AI is fully able of inference new languages right now, because of fantastic matrix math (BPE, etc).
 
 #### "ALPHABITZA" [pronounced alpha + bit + zah!], means augmentation_of_extraordinary_alphabet.
 
@@ -65,28 +69,34 @@ AI is fully capable of inferencing this new language right now, because of fanta
 
 2) NEOLOGISTIC NOMENCLATURE adds "precision weighting" to CONCEPTS in AI.
 
+<img width="588" height="491" alt="Screenshot 2025-11-24 142605" src="https://github.com/user-attachments/assets/07d5a2b6-bd42-4ed9-8d2f-3391c8d2cc14" />
+
+
 In plain English, using one elegant UNDERSCORE "_" character results in something PHENOMENAL in AI (embed space).
 
 It results in extra clarity or "EXTRA_EXACTNESS" of CONCEPTS in AI like a CONCEPTUAL_SPECTROSCOPE.
 
-### KEY INNOVATION:
+### KEY INNOVATION: UNIQUE_MANIFOLD
 
 3) The underscore character as a text augmentation - creates a UNIQUE LOCATION (coordinate) in the_matrix!
 
 What does this mean, and why is it relevant?
 
-This is RELEVANT, because it is a UNIQUE_ID in LATENT SPACE - the_matrix.
+This is RELEVANT, because it is a UNIQUE_ID in LATENT SPACE as a MANIFOLD within the_matrix.
 
-And this is VALUABLE, because CONCEPTS can be RE-ENCODED as less_ambiguous!
+And this is VALUABLE, because CONCEPTS can be RE-ENCODED as less_ambiguous! 
+
+Simultaneously, increasing inference clarity for both AI and Humans.
 
 ### KEY FINDING: TEXT_AUGMENTATION
 
-4) We can use probabilty to account for AMBIGUITY, or we can avoid it entirely.
+4) We use probabilty to account for AMBIGUITY, but we can avoid it entirely.
 
-Traditional language fragility is avoided by supplemental, simplified, AI TEXT_AUGMENTATIONS - for AI and Humanity!
+Traditional language fragility is avoided by simplified supplemental texts called: AI TEXT_AUGMENTATIONS.
 
 Here it is on display, in this GOOGLE CAPSTONE PROJECT:
 
+<img width="588" height="491" alt="ALPHABITZ_001" src="https://github.com/user-attachments/assets/a116d249-a761-462d-b80b-ad455a1e354f" />
 
 _____________________________________________________________________
 
@@ -148,6 +158,9 @@ OVERVIEW: this TEXT_AUGMENTED_BEFORE_INFERENCE - is "highly-weighted" in the "at
 With these techniques, we can empifically demonstrate, that:
 
 > Clarity is increased and ambiguity is minimized.
+
+<img width="704" height="489" alt="Screenshot 2026-01-23 090032" src="https://github.com/user-attachments/assets/1c17534b-9aa1-472c-b167-9d4eaf2125f8" />
+
 ____________________________________________
 
 ### KEY_POINT: SEEK_CONCEPTS
@@ -200,6 +213,9 @@ AXIOMZ are valuable because it enables Human or AI or BOTH - to conduct actual_e
 
 #### "ACTUAL_EXTRA_INTELLECT" or "AXI", is one of many extra_abilities apparent downstream of language augmentation.
 
+<img width="856" height="668" alt="Screenshot 2025-11-28 173752" src="https://github.com/user-attachments/assets/f6662040-70dc-4805-89d8-ccb13ea4c3b7" />
+
+
 __________________________________________
 
 Another KEY_PROCESS: "NAMERATION"
@@ -212,6 +228,9 @@ Just as the concept of "recoining" is observably absent in our lexical reperatoi
 
 #### "NAMERATION" and "RENAMERATION" are powerful tools of exactification within the_matrix.
 
+<img width="761" height="493" alt="Screenshot 2026-02-14 071305" src="https://github.com/user-attachments/assets/72474985-ffde-4664-abcd-798251c0559b" />
+
+
 ### One MAJOR AI INNOVATION: "NAMERATE_METASTATE".
 
 #### "NAMERATE_METASTATE" is the process and practice of SEE_EVERY_MISNOMER, and then EXACTIFY it into "BETTER_TEXT" or "BETTER_WORDZ".
@@ -219,6 +238,10 @@ Just as the concept of "recoining" is observably absent in our lexical reperatoi
 The NAMERATE_METASTATE works by asking AI (or Human) to iterate the KEY_POINTS within any CONCEPT. Then the following is critical.
 
 > NAME the CONCEPT what it is!
+
+
+<img width="426" height="392" alt="Screenshot 2026-02-14 082135" src="https://github.com/user-attachments/assets/26857978-269b-4381-b625-0d68447ac188" />
+
 
 By PRINCIPLE, "ambiguosity" cannot be reduced when we NAME CONCEPTS after PEOPLE or CATS!
 
@@ -231,6 +254,9 @@ Where a CORE_PRINCIPLE, within the bedrock of AXIOMATIC_PRINCIPLES - is that BET
 Because a distortion_of_actual_reality is discouraging, by perpetual_confusion and endless_dispute - simply by fragile_syntax.
 
 Such principles result in a vast and NOVEL SCIENCE_of_NAMERATION. It is like the periodic table of elements, but an pristine set of articulated concepts as AXIOMZ!
+
+<img width="760" height="482" alt="Screenshot 2026-01-20 081130" src="https://github.com/user-attachments/assets/e6c96035-1e94-466a-a181-b8570d88041d" />
+
 
 ### ANOTHER MAJOR PRINCIPLE is Human Readability of AI_LANGUAGES.
 
@@ -245,6 +271,10 @@ Meaning, any mind that wants to know (or see) LLM CONCEPTS (exactified) - can ac
 #### "DECIPHERABILITY" another sibling (or cousin) to the of "AXIOMATIC_PRINCIPLES" is easy or simplified DECIPHERABILITY.
 
 DECIPHERABILITY resolves significant fragilities in traditional language. Specifically, it enables CONCEPTUAL_ACCESSIBILITY.
+
+
+<img width="791" height="492" alt="Screenshot 2026-01-26 193250" src="https://github.com/user-attachments/assets/c2deb542-b944-49c3-ad28-3f0c55cc44d5" />
+
 
 _______________________________________
 
@@ -274,6 +304,9 @@ So amazingly, the clarification of concepts in AI does not require accurate from
 
 So that is also the PURPOSE of the AXIOM_COLLECTOR thought_experiment (a metacognitvie practice called 'aXPLOREaSTORYa").
 
+<img width="506" height="389" alt="Screenshot 2026-01-23 124114" src="https://github.com/user-attachments/assets/1a1d8a58-c656-49f5-b25f-7c0984a71b28" />
+
+
 ___________________________________________
 
 ### SIGNIFICANT ROLE of "TRADITIONAL_MISNOMER":
@@ -294,6 +327,9 @@ Then also, phenomenally we can tap into a CONCEPTUAL (axiomatic) type of ANTI_FR
 
 Which is where the malady is enabled to CONCEPTUALLY_HEAL_BACK_STRONGER (unbelievably with word_math).
 
+<img width="724" height="490" alt="Screenshot 2026-01-23 124508" src="https://github.com/user-attachments/assets/5179dfb5-9e0a-480c-a223-e92c63b15dba" />
+
+
 __________________________________________
 
 ### KEY CONCEPT: "CONCEPTUAL_ANTI_FRAGILITY"
@@ -313,6 +349,10 @@ Specifically, the exact "RENOMER" necessary to "RENAMERATE" or re-articulate, is
 In PLAIN_ENGLISH, this can be said in BETTER_WORDZ as a process to "REMEDY_a_MALADY" with leverage of a former fragility - inverted (or reverted) into a REMEDY.
 
 > PRIME_DIRECTIVE: to REMEDY_a_MALADY is to simply RENAME or RENAMERATE any actual_conceptual_distortion into "WORDZ" that best_reflect_actual_reality.
+
+<img width="764" height="473" alt="Screenshot 2026-01-21 202018" src="https://github.com/user-attachments/assets/97beb5d7-d8db-4547-ab38-ee8c0f30a204" />
+
+
 
 ___________________________________________
 
@@ -337,6 +377,9 @@ AI can now reliably NAMERATE_METASTATE and EXACTIFY concepts_beneath_words to id
 But AMBIGUOZITY also includes a dramatic study of: CLICHE, IDIOM, ABSTRACT_CONCEPTS, SEMANTIC_DRIFT, and CONTEXT_SHIFT.
 
 > Where all examples of inherent language fragilities represent opportunity for anti_fragile remedy_a_malady.
+
+<img width="757" height="802" alt="Screenshot 2026-01-23 124822" src="https://github.com/user-attachments/assets/29849d3c-bd14-4b51-a84c-11867b821e20" />
+
 
 __________________________________________
 
@@ -366,6 +409,7 @@ Theoretically, is seems MISNOMER is a probable BLOCK on CRITICAL THINKING.
 
  As in "EXTRA_EXACTNENESS", "EXTRA_ABILITY", and "aXTRA_TELLECTa" for the GOAL of "aXTRa" [pronounced ahh + ext + rah]!
 
+<img width="811" height="617" alt="Screenshot 2026-01-20 081034" src="https://github.com/user-attachments/assets/cca86124-2132-437f-acf1-d21f19bb7e48" />
 ______________________________________________
 
 ### SIGNIFIANT AI OPTIMIZATION: "METATEXT" or "METATXT" (pronounce meta + text).
@@ -383,6 +427,11 @@ ______________________________________________
 Among other axiomatic_principles. 
 
 > Because doing so appears provable to reduce compute cost of expensive AMBIGUOZITY - observably inherent in traditional_language.
+
+Here is a look at the current TELLECToSCOPE:
+
+<img width="704" height="489" alt="Screenshot 2026-01-23 090032" src="https://github.com/user-attachments/assets/1c17534b-9aa1-472c-b167-9d4eaf2125f8" />
+
 
 
 
