@@ -111,17 +111,23 @@ It is CONCEPTS illustrated by 3D representations.
 
 > For example see sentiment analysis, in a grid system of META_CONTEXT.
 
-It is called CONCEPTUAL_SPECTROSCOPY for AI and the TELLECToSCOPE is the AI Tool to see into any LLM.
+It is called CONCEPTUAL_SPECTROSCOPY for AI and SPECTRoSCOPE is the AI Tool to see into any LLM.
 
 #### CONCEPTUAL_SPECTROSCOPY is the VISUALIZATION of CONCEPTS from the_matrix into 3D grid systems.
+
+Where the 3D Grid Systems visualize the multiple-dimensionality - in a SPECTRoGRAPH!
+
+It's a lot of fun!
 
 __________________________________________________________
 
 #### "META_CONTEXT" or "METASTATE" is a collection of BITZ around other BITZ - to form AXIOMZ.
 
-#### "AXIOMZ" are extraordinary short BITZ of of WORDZ, combined with MECHZ to form AXIOMA or AXIOMZ (plural).
+#### "AXIOMZ" are extraordinary short BITZ of WORDZ, to form AXIOMZ (plural).
 
-AXIOMZ are made by combining EXTRA_EXACT_TEXT within METASTATE to create conceptual_compression.
+> AXIOMZ are words that BEST_REFLECT_ACTUAL_REALITY.
+
+They are defined by AI_EXACTIFY principles, for EXTRA_EXACT_TEXT, or generated PRISTINE_TEXT.
 
 ________________________________________________________________
 
@@ -163,15 +169,31 @@ With these techniques, we can empifically demonstrate, that:
 
 ____________________________________________
 
-### KEY_POINT: SEEK_CONCEPTS
+### KEY_POINT: TRANSFORM words_to_WORDZ
 
 Realize that such a definition of EXTRA_EXACT_TEXT does something remarkable in the_matrix.
 
-Once given to AI, the NEOLOGISM represents a NEW COORDINATE in embedding space as a NOVEL_MANIFOLD.
+Once given to AI, the NEOLOGISM represents a NEW COORDINATE to be RE-ARTICULATE in embedding space.
 
-#### NOVEL_MANIFOLD is basically a newly minted or coined concept in a more pristine lexical syntax.
+1) As LESS_AMBIGUOUS and
+2) Simultaneously with EXTRA_CLARITY.
+3) as a VISIBLE_MANIFOLD.
 
-COMBINED with BITZ into a METASTATE for compression - to generate dynamic AXIOMZ of multi-dimensional concepts in the_matrix. 
+#### "WORDZ" means actual_extraordinary_words. Exactified words, to be less_ambiguous, and extra_clarity.
+
+WORDZ - enable a phenomena of PRISTINE_TEXTS for LANGUAGE ANTI-FRAGILITY (as ANTI_FRAGILE_LANGUAGE).
+
+> PRISTINE_TEXTS carry a HIGHER SEMANTIC DENSITY.
+
+BITZ are COMBINED into WORDZ, then into METASTATE - to generate AXIOMZ!
+
+Then the AXIOMZ are visualized in CONCEPTUAL_SPECTROGRAPH.
+
+> Based on a fundamental AXIOMATIC_PRINCIPLE to BEST_REFLECT_ACTUAL_REALITY.
+
+Each VISUAL_MANIFOLD (AXIOMA), represents an ABSTRACT_CONCEPT, where the METASTATE is the VISUALIZTION.
+
+From a BINARY mentality, to multi-dimensional concept management. 
 
 Where the next quandry, was to "generate" novel manifolds that are BRIEF and EXTRA_EXACT as AXIOMZ.
 
