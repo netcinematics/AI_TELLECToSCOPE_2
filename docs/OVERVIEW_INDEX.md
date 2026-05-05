@@ -525,15 +525,98 @@ _ : The Base/Foundation (The self_descriptive, plain_english, to anchor the word
 
 . : The Actual Reality (The supplementation of knowledge).
 
+_______________________________________________
+
+### MECHZ and PRINCIPLES.
+
+> SOLVING COMPLEX CONCEPTUAL PUZZLES like: CONTEXT_SHIFT and SEMANTIC_DRIFT!
+
+So, it appears quite important to admit, that TRADITIONAL_NAMING_CONVENTIONS:
+
+> were never intended for use in this WORLD WIDE AI WEB.
+
+It appears, TRADITIONAL_HUMAN_LANGUAGE is up for novel translation.
+
+To SIMPLIFY, ADJUSTIFY, EXACTIFY, ABBREVIATE, clarify.
+
+That vast expanse of dimensionality is addressed with MECHZ.
+
+#### "MECHZ" are REMARKABLE_MECHANISMS. Similar to AI "Tool Use". 
+
+But mechanisms are basically LITTLE MODULAR TOKENIZERS (functions) - that can plug in anywhere.
+
+The collection of all these MECHZ, is like the gears of a clock.
+
+But inside a SPECTRoSCOPE - such GEARZ are finely designed to - FOCUS the VIEWZ!
+
+> To focus the literal VIEWZ of actual_reality.
+
+#### "VIEWZ" are extraordinary views.
+One remarkable aspect of VIEWZ is that they are overwhelmingly MULTI-DIMENSIONAL.
+
+> Humans - historically - were always within a limit of NUMBER_of_VIEWZ_in_FOCUS.
+
+But now, AI does not share the adorable biological default perspective limit.
+
+> AI clearly demonstrates the actual_extra_ability - to HOLD_FOCUS on ALL_VIEWZ simultaneously.
+
+Phenominally, this is expected. This is important. We can articulate this further.
+
+> Humans track a set number of VIEWZ (focus topics), because that is the number that can biologically, HOLD_FOCUS.
+
+But this can be SIMPLIFIED! This CONCEPT is YET_to_be_ARTICULATED!
+
+> With AI, it is THEORETICALLY POSSIBLE - to ITERATE_all_VIEWZ - simply because AI can ITERATE_all_VIEWZ (all_TIME).
+
+It is predictable that the Human Mind experience OVERWHELM. But not anymore!
+
+At this point, as we literally cross a boundary exactly_where we are without_words. Into CONCEPTS_beyond_WORDS, or WORDZ.
+
+### KEY BREAKTHROUGH: DYNAMIC_AXIS VISUALIZATIONS
+
+It is simple. 
+
+> The hyper-complex, multi-dimensionality of all_VIEWZ, can be SIMPLIFIED and VISUALIZED - by DYNAMIC AXIS in a CUBE or a TESSERACT.
+
+With the HUMAN INTERACTION MODALITY being enabled to "TUG_on_CONCEPTS" across any DIMENSIONALITY. 
+
+> Thus UI to simplify the default_hyper_complexity of actual reality.
+
+#### "DYNAMIC_AXIS" gives AI an "INTERPRETIVE" modality.
+
+Meaning: we can hold_focus on a large number of dimensions - by making the AXIS of a FRACTAL - DYNAMIC.
+
 ______________________________________________
 
 ### In GRAND CONCLUSION: "AXIOMATIC_PRINCIPLES"
 
-> It appears probable that AI will dramatically influence human language, to be more: BRIEF, EXACT, COMBINABLE and DECIPHERABLE.
+I found that NAMING CONVENTIONS for MEDICAL terminology is called BIONOMIAL NOMENCLATURE - to avoid SEMANTIC DRIFT.
 
-Among other axiomatic_principles. 
+ALPHABITZA is an EXTENSION of BIONOMIAL NOMENCLATURE, within the CONTEXT_SHIFT presented by AI.
 
-> Because doing so appears provable to reduce compute cost of expensive AMBIGUOZITY - observably inherent in traditional_language.
+> It appears probable that AI will dramatically influence human language in our lifetime.
+
+But not how we thought. Or we would have done it already!
+
+Human Language can be OPTIMIZED to match the CONTEXT_SHIFT of AI.
+
+To be more: BRIEF, EXACT, COMBINABLE and DECIPHERABLE.
+
+And also for the first-time in all_human_history - for words to BEST_REFLECT_ACTUAL_REALITY.
+
+Traditional vocabulary had to engrain traditional_fragility - it was natural. 
+
+And now with AI, it will be possible to lexically clarify all_concepts.
+
+> Transform words_to_WORDZ for less_ambiguity and extra_clarity!
+
+These are but a few EXAMPLES of "AXIOMATIC_PRINCIPLES".
+
+This AI NOMENCLATURE PROPOSAL is NOT slang or ideosyncracy - because it is AXIOMATIC.
+
+Meaning that these CONCEPTS and PRACTICE is based in AXIOMATIC_PRINCIPLES.
+
+> Axiomatic_Principles for human text to best_reflect_actual_reality.
 
 Here is a look at the current SPECTRoSCOPE:
 
