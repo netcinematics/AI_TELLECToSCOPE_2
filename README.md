@@ -162,7 +162,7 @@ ALTER_BITZ: The repository of "falseness." This is where archaic logic or prior 
 3. The Octant vs. Position Paradox
 Since coordinates are subjective "smudges on the lens," using the Octant (1-8) as the primary anchor point ensures structural stability while allowing the orbits to remain fluid. The "pos" label within MetaText—8(pos)—acts as a suggestion, not a law. It defines the gravity well, but the AXIOMZ are free to tumble, pinwheel, and "spaghettify" within that space.
 
-_________________________________
+__________________________________
 
 proposed a recursive, nested syntax: (|[{(|[{}]|)}]|). In standard logic, brackets denote enclosure; in MetaText, they denote Levels of Reality.
 
@@ -250,5 +250,71 @@ Memory Management: Since Three.js and WebGPU LLMs both fight for the GPU, implem
 
 Function Calling: Use Gemma 4’s native function calling to let the model manipulate its own view. (e.g., "Gemma, show me the cluster where you made the decision to ignore the outlier data.")
 
+________________________________________________________________
+
 This is a Design Session around AXIOMZ. Lets discuss AXIOMATIC_THEORY! So the most recent realization was that we need AXIOMATIC_EXEMPLARS!  Something to show & tell at the same time. As a perfect bi-section, simplification. 3) "LLM Says," Example stories to show - the CONCEPT.  With CONCEPTUAL_SPECTROSCOPY.  3) For example, a)  concepts just outside our knowledge horizon. Proven by the ambiguity and misnomer of "UNDERSTANDING". Stated in  AXIOM: "understanding_is_not_yet_undestood". Conceptual disconnect with actual_reality - as a yet articulated phenomena. A concept of known_beyond_known. A SIMPLE_INDEX (IDX) of CONCEPTS_BEYOND_US. Or understand_not_understood. Is root_cause of all_conceptual_oddity, within STRANGE_NATURE. Visualized to draw "glass" ORBZ around the perimeter - to exemplify knowledge_we_do_not_yet_know.  CONCEPTS_BEYOND_US.  b)The PRIME_GOAL of AXIOMZ is a search for words that BEST_REFLECT_ACTUAL_REALITY and the INTERACTION is to search for - and COLLECT_AXIOMZ! CONCEPTUAL_ACCESSIBILITY. the next concept is labeled on screen. c) So we can build into that metacognitively with - AXIOMATIC_EXEMPLAR. d) So, hear me GEM! This is where it gets good!  AXIOMATIC_THEORY as the metacognitive topic. 4) From my WebGL experience - I can see these linguistic oddities - clear in my mind - "like neon lights at night" - now we need to convert it into  CONCEPTUAL_TOPOLOGY in three.js!  5) We can do that with AXIOM_GALLERY. We can define "AXIOMATIC_THEORY" itself - as words  tranzform into WORDZ - and also the best_reflection of the MANIFOLD - as PRIME_GOAL! EXTRA_EXACTNESS. 6) PRINCIPZ: IDX: "aPRINCIPZaXTRa" -  AXIOM: "extra_vocabulary_for_extra_concept". 7) Also the DISAXIOM! "aPRINCIPZaBLOXa"  axiom: "misinformation_blocks_information". 8) A couple more relevant WORDZ - "transforming words to WORDZ": MANIFOLD_MORPHOLOGY! current 9) So create a design for a NEW APP called AI_MANIFOLD_GALLERY, a single html - much smaller than aTELLECToSCOPE. But could be merged later. 10) In the attached file we have a good starting point. Look to reuse the LEGEND_PANEL and theNow we need to EXPERIMENT with many ways t
 
+______________________
+
+AXIOMATIC TABLE of CONCEPTS - like periodic table of elements, but CONCEPTUAL. AXIOMATIC_PRINCIPLE: If we had "BITZ" of TEXT, to "best_reflect_actual_reality" - what would it say? To generate, such PRISTINE_TXT - is to COLLECT_AXIOMZ! This paper describes a NOVEL APPROACH to innovate AI by INNOVATE_the_INPUTS. And scientific practice to "exactify" concepts, and unlock actual_extra_ability, with actual_extra_vocabulary.
+
+
+_____________________________
+
+MANIFOLD DESIGN
+
+MANIFOLD_LEGEND
+NEBULA
+Fluid macro-event genesis state.
+CLUSTER
+Rigid truth lattice. Primary conceptual truths.
+FOG
+Ambiguous probabilistic region.
+WIREFRAME
+Structural boundary without mass.
+GLASS
+Transparent stable standard flow.
+ATOMZ
+Dynamic energetic subsystems.
+SPHEROID
+Dense, unbreakable conceptual node.
+
+_________________________________
+
+MANIFOLD_LEGEND (v2)
+
+CLOUD_FAMILY:
+
+DARK_NEBULA - COLD_CLOUD:
+Obscure macro-event genesis state.
+
+SPARK_NEBULA - HOT_CLOUD:
+Highly charged probabilistic point-cloud.
+
+FOGZ - FOG_CLOUD:
+Ambiguous probabilistic region.
+
+
+ATOMZ
+Dynamic energetic subsystems.
+
+SPHEROID_MOONZ
+Dense, unbreakable conceptual node.
+
+
+GLASS_NUCLEUS:
+Transparent standard flow with solid sub-states.
+
+HOLO_CORE  - WIRED_CORE:
+Dense core bounded by rigid wireframe structure. aLIMITZa.
+
+
+HOLOZ:
+HOLOZ_TETRA - Tetrahedron: 
+Foundational base connection point.
+HOLOZ_OCTA - Octahedron:
+Dual-pole conceptual state geometry.
+HOLOZ_ICOSA - Icosahedron:
+Complex, multi-faceted truth lattice.
+HOLOZ_DODECA - Dodecahedron: 
+Complete metacognitive boundary node.
