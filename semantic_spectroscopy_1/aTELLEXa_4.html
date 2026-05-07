@@ -18,12 +18,6 @@
         .spectro-scrollbar::-webkit-scrollbar-track { background: rgba(0, 40, 40, 0.5); }
         .spectro-scrollbar::-webkit-scrollbar-thumb { background: #00ffcc; border-radius: 2px; }
 
-        .scanline {
-            width: 100%; height: 2px; background: rgba(0, 255, 204, 0.05);
-            position: absolute; animation: scan 6s linear infinite; pointer-events: none; z-index: 5;
-        }
-        @keyframes scan { from { top: 0; } to { top: 100%; } }
-
         .glitch-text { text-shadow: 2px 0 #ff00ff, -2px 0 #00ffff; animation: glitch 3s infinite; }
         @keyframes glitch {
             0% { transform: translate(0); }
@@ -55,7 +49,6 @@
 
     <div id="canvas-container"></div>
     <div id="overlay-vignette"></div>
-    <div class="scanline"></div>
 
     <div class="ui-layer">
         <!-- Top Title Bar -->
@@ -76,14 +69,23 @@
         </div>
 
         <!-- Left Legend Panel -->
-        <div id="spectroLegend" class="absolute left-6 top-1/2 transform -translate-y-1/2 z-40 interactzone p-4 shadow-2xl flex flex-col gap-4 w-[320px] max-h-[60vh] overflow-y-auto spectro-scrollbar pointer-events-auto transition-all duration-300">
-            <div class="terminal-header flex justify-between">
+        <div id="spectroLegend" class="absolute left-6 top-1/2 transform -translate-y-1/2 z-40 interactzone p-4 shadow-2xl flex flex-col gap-4 w-[320px] max-h-[60vh] overflow-y-auto spectro-scrollbar pointer-events-auto transition-all duration-300 hidden-panel">
+            <div class="terminal-header flex justify-between items-center">
                 <span>MANIFOLD_LEGEND (v2)</span>
+                <button onclick="closeLegend()" class="text-[#ff00ff] hover:text-white font-bold px-1 transition-colors">✕</button>
             </div>
             <div id="legend-content" class="flex flex-col gap-2">
                 <!-- Legend items injected by JS -->
             </div>
         </div>
+
+        <!-- Toggleable Legend Button (Starts Visible) -->
+        <button id="legend-toggle-btn" class="absolute left-6 top-1/2 transform -translate-y-1/2 
+            z-40 interactzone px-4 py-2 text-[10px] font-bold tracking-widest 
+            border-l-4 border-[#ff00ff] pointer-events-auto transition-all duration-300 rounded-lg"
+            style="margin-top: -244px;">
+            LEGEND
+        </button>
 
         <!-- Bottom Collapsible Output Panel -->
         <div id="outputPanel" class="output-panel hidden-bottom absolute bottom-24 left-1/2 w-[80%] max-w-4xl h-[30vh] interactzone flex flex-col shadow-2xl z-50 pointer-events-auto">
@@ -101,23 +103,8 @@
         <!-- Bottom Status Bar -->
         <div class="absolute bottom-6 left-6 flex items-end gap-4 pointer-events-none z-40">
             <div class="interactzone px-4 py-2 flex items-center gap-6 pointer-events-auto rounded-full">
-                <div class="flex flex-col">
-                    <span class="text-[8px] opacity-50 uppercase">Cam Vector</span>
-                    <span id="coord-display" class="text-[10px] font-mono">X: 0.00 Y: 0.00 Z: 0.00</span>
-                </div>
-                <div class="h-6 w-[1px] bg-white/20"></div>
-                <!-- Eye Icon -->
-                <button id="toggle-ui-elements" class="opacity-50 hover:opacity-100 transition-opacity" title="Toggle Legend Controls">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00ffcc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                </button>
-                <div class="h-6 w-[1px] bg-white/20"></div>
                 <button onclick="toggleOutputPanel()" class="text-[10px] font-bold tracking-widest text-[#ff00ff] hover:text-white">📝 LOGZ</button>
             </div>
-            
-            <!-- Toggleable Legend Button -->
-            <button id="legend-toggle-btn" class="interactzone px-4 py-2 text-[10px] font-bold tracking-widest border-t-2 border-[#ff00ff] pointer-events-auto opacity-0 translate-y-4 transition-all duration-300 rounded-lg">
-                LEGEND
-            </button>
         </div>
         
         <!-- Center Bottom Identity -->
@@ -227,7 +214,7 @@
         // Expanded Data Set explicitly matching the requested terminology and shaders
         const GALLERY_DATA = [
             // Target Token / Center Concept
-            { label: 'TARGET_TOKEN', type: 'COMPOSITE_CONCEPTS', color: 0x00ff88, color2: 0xffffff, size: 14, x: 0, y: 0, z: 0, desc: 'Emerald glass sphere with multicolor concept focus sub_shapes.' },
+            { label: 'TARGET_TOKEN', type: 'COMPOSITE_CONCEPTS', color: 0xffcc00, color2: 0xffcc00, size: 14, x: 0, y: 0, z: 0, desc: 'Emerald glass sphere with multicolor concept focus sub_shapes.' },
             
             // Cloud Family
             { label: 'DARK_NEBULA', type: 'COLD_CLOUD', color: 0x3a0088, color2: 0x110022, size: 12, x: -35, y: -10, z: -25, desc: 'Obscure macro-event genesis state.' },
@@ -237,7 +224,7 @@
             // Subsystems & Conceptual Nodes
             { label: 'ATOMZ', type: 'ATOMZ', color: 0xffcc00, size: 6, x: 30, y: -5, z: 25, desc: 'Dynamic energetic subsystems.' },
             { label: 'SPHEROID_MOONZ', type: 'SPHEROID_MOONZ', color: 0x88ff00, size: 8, x: -15, y: 30, z: -10, desc: 'Dense, unbreakable conceptual node.' },
-            { label: 'GLASS_NUCLEUS', type: 'GLASS_NUCLEUS', color: 0x00ffcc, color2: 0xff00aa, size: 10, x: 40, y: 20, z: 15, desc: 'Transparent standard flow with solid sub-states.' },
+            { label: 'GLASS_NUCLEUS', type: 'GLASS_NUCLEUS', color: 0x8b28d7, color2: 0xff00aa, size: 10, x: 40, y: 20, z: 15, desc: 'Transparent standard flow with solid sub-states.' },
             { label: 'HOLO_CORE', type: 'WIRED_CORE', color: 0xffaa00, color2: 0xff0055, size: 9, x: -25, y: -25, z: 25, desc: 'Dense core bounded by rigid wireframe structure. aLIMITZa.' },
             
             // Holoz / Metacognitive Boundaries
@@ -319,6 +306,9 @@
 
             sharedGlowTex = createGlowTexture();
 
+            // const common = { color: d.color, metalness: 0.7, roughness: 0.3, emissive: d.color, emissiveIntensity: baseEmissiveIntensity };
+
+            
             GALLERY_DATA.forEach(data => {
                 const group = new THREE.Group();
                 group.position.set(data.x, data.y, data.z);
@@ -328,14 +318,55 @@
                 if (data.type === 'COMPOSITE_CONCEPTS') {
                     // Central Target Token (Emerald Glass)
                     const shellGeo = new THREE.SphereGeometry(data.size, 32, 32);
-                    const shellMat = new THREE.MeshPhysicalMaterial({ 
-                        color: data.color, transparent: true, opacity: 0.3, roughness: 0.1, metalness: 0.8, envMapIntensity: 1.0, depthWrite: false 
-                    });
-                    mainMesh = new THREE.Mesh(shellGeo, shellMat);
+                    // const shellMat = new THREE.MeshPhysicalMaterial({ 
+                    //  0xffaa00  0x00ffcc color: 0xffcc00, transparent: true, opacity: 0.25, roughness: 0.0, metalness: 0.0, clearcoat: 1.0, clearcoatRoughness: 0.1, depthWrite: false 
+                    // });
                     
-                    const rimGeo = new THREE.SphereGeometry(data.size * 1.01, 32, 32);
-                    const rimMat = new THREE.MeshBasicMaterial({color: data.color, transparent: true, opacity: 0.15, wireframe: true});
-                    mainMesh.add(new THREE.Mesh(rimGeo, rimMat));
+            // const common = { color: d.color, metalness: 0.7, roughness: 0.3, emissive: d.color, emissiveIntensity: baseEmissiveIntensity };
+
+
+            // if (d.texMode === 'cluster_core') {
+            //     mat = new THREE.MeshStandardMaterial({...common, transparent: true, opacity: 0.3, roughness: 0.1, metalness: 0.8});
+            //     subMesh = new THREE.Group();
+            //     const polyGeo = new THREE.DodecahedronGeometry(finalSize * 0.45, 0);
+            //     const polyMat = new THREE.MeshStandardMaterial({color: 0xffffff, emissive: d.color, emissiveIntensity: 1.5, metalness: 0.6, roughness: 0.2});
+            //     const polyhedron = new THREE.Mesh(polyGeo, polyMat);
+            //     const edgeGeo = new THREE.WireframeGeometry(polyGeo);
+            //     const edgeMat = new THREE.LineBasicMaterial({ color: 0xffaa00, transparent: true, opacity: 0.5 });
+            //     const edges = new THREE.LineSegments(edgeGeo, edgeMat);
+            //     polyhedron.add(edges); subMesh.add(polyhedron);
+            // }
+            // //...
+            // if (isCenter) {
+            //     const sparkGeo = new THREE.BufferGeometry(); const sparkPos = []; const sparkRadius = finalSize * 1.05; 
+            //     for(let i=0; i<100; i++){
+            //         const u = Math.random(), v = Math.random();
+            //         const theta = u * 2.0 * Math.PI, phi = Math.acos(2.0 * v - 1.0);
+            //         sparkPos.push(sparkRadius * Math.sin(phi) * Math.cos(theta), sparkRadius * Math.sin(phi) * Math.sin(theta), sparkRadius * Math.cos(phi));
+            //     }
+            //     sparkGeo.setAttribute('position', new THREE.Float32BufferAttribute(sparkPos, 3));
+            //     const sparkMat = new THREE.PointsMaterial({color: 0xffaa00, size: 0.08, transparent: true, opacity: 0.9});
+            //     sparkSystem = new THREE.Points(sparkGeo, sparkMat); orb.add(sparkSystem);
+
+            //     moonsGroup = new THREE.Group(); const baseMoonR = finalSize * 0.18;
+            //     for (let m = 0; m < 10; m++) {
+            //         const moonR = baseMoonR * (0.25 + Math.random() * 0.75);
+            //         const moonGeo = new THREE.SphereGeometry(moonR, 16, 16);
+            //         const greyVal = 64 + Math.floor(Math.random() * 128); 
+            //         const moonColor = new THREE.Color(`rgb(${greyVal}, ${greyVal}, ${greyVal})`);
+            //         const moonMat = new THREE.MeshStandardMaterial({ color: moonColor, roughness: 0.9, metalness: 0.2 });
+            //         const moon = new THREE.Mesh(moonGeo, moonMat);
+            //         const angle = (m / 10) * Math.PI * 2; const dist = finalSize * 1.5 + Math.random() * 0.6;
+            //         moon.position.set(Math.cos(angle) * dist, (Math.random() - 0.5) * 0.1, Math.sin(angle) * dist);
+            //         moonsGroup.add(moon);
+            //     }
+            //     orb.add(moonsGroup);
+            // }
+
+                    let shellMat = new THREE.MeshStandardMaterial({color: 0xffaa00, transparent: true, opacity: 0.22, 
+                        roughness: 0.2, metalness: 0.6, emissive: 'purple', emissiveIntensity: 1.5, wireframe:true
+                    }); 
+                    mainMesh = new THREE.Mesh(shellGeo, shellMat);
 
                     // 6 distinct multicolor sub_shapes
                     const colors = [0xff0000, 0x00ff00, 0x0000ff, 0xffff00, 0xff00ff, 0x00ffff];
@@ -348,7 +379,7 @@
                         new THREE.SphereGeometry(data.size*0.15, 16, 16)
                     ];
 
-                    for(let i=0; i<6; i++) {
+                    for(let i=0; i<6; i++) { 
                         const sMat = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: colors[i], emissiveIntensity: 1.2 });
                         const sMesh = new THREE.Mesh(shapes[i], sMat);
                         sMesh.userData = { 
@@ -361,17 +392,25 @@
                     }
 
                 } else if (data.type === 'COLD_CLOUD') {
-                    const geo = new THREE.SphereGeometry(data.size, 64, 64);
-                    const mat = new THREE.ShaderMaterial({
-                        uniforms: THREE.UniformsUtils.clone(NebulaShader.uniforms),
-                        vertexShader: NebulaShader.vertexShader,
-                        fragmentShader: NebulaShader.fragmentShader,
-                        transparent: true, depthWrite: false, side: THREE.BackSide, blending: THREE.AdditiveBlending
+                    const fogGeo = new THREE.BufferGeometry();
+                    const fogPos = [];
+                    for(let i=0; i<80; i++) { // low fidelity fuzzy
+                        const r = data.size * Math.cbrt(Math.random());
+                        const theta = Math.random() * 2 * Math.PI;
+                        const phi = Math.acos(2 * Math.random() - 1);
+                        fogPos.push(r * Math.sin(phi) * Math.cos(theta), r * Math.sin(phi) * Math.sin(theta), r * Math.cos(phi));
+                    }
+                    fogGeo.setAttribute('position', new THREE.Float32BufferAttribute(fogPos, 3));
+                    const fogMat = new THREE.PointsMaterial({
+                        color: data.color, size: data.size * 1.5, map: sharedGlowTex, 
+                        transparent: true, opacity: 0.35, depthWrite: false, blending: THREE.AdditiveBlending
                     });
-                    mat.uniforms.baseColor.value = new THREE.Color(data.color);
-                    mat.uniforms.nebulaColor.value = new THREE.Color(data.color2);
-                    mainMesh = new THREE.Mesh(geo, mat);
-                    animData.shader = mat;
+                    mainMesh = new THREE.Points(fogGeo, fogMat);
+                    
+                    const coreMat = new THREE.SpriteMaterial({ map: sharedGlowTex, color: data.color2, transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending });
+                    const core = new THREE.Sprite(coreMat);
+                    core.scale.set(data.size * 2, data.size * 2, 1);
+                    mainMesh.add(core);
 
                 } else if (data.type === 'HOT_CLOUD') {
                     const fogGeo = new THREE.BufferGeometry();
@@ -441,14 +480,10 @@
 
                 } else if (data.type === 'GLASS_NUCLEUS') {
                     const shellGeo = new THREE.SphereGeometry(data.size, 32, 32);
-                    const shellMat = new THREE.MeshStandardMaterial({ 
-                        color: data.color, transparent: true, opacity: 0.15, roughness: 0.0, metalness: 1.0, depthWrite: false
+                    const shellMat = new THREE.MeshPhysicalMaterial({ 
+                        color: data.color, transparent: true, opacity: 0.35, roughness: 0.1, metalness: 0.2, clearcoat: 1.0, clearcoatRoughness: 0.1, depthWrite: false
                     });
                     mainMesh = new THREE.Mesh(shellGeo, shellMat);
-                    
-                    const rimGeo = new THREE.SphereGeometry(data.size*1.02, 32, 32);
-                    const rimMat = new THREE.MeshBasicMaterial({color: data.color, transparent: true, opacity: 0.1, wireframe: true});
-                    mainMesh.add(new THREE.Mesh(rimGeo, rimMat));
 
                     for(let i=0; i<5; i++) {
                         const sGeo = new THREE.SphereGeometry(data.size * 0.25, 16, 16);
@@ -561,9 +596,9 @@
                         sub.rotation.x += 0.01;
                         sub.rotation.y += 0.01;
                     });
-                } else if (ad.type === 'COLD_CLOUD' && ad.shader) {
-                    ad.shader.uniforms.time.value = time * 0.5; // Slower birth/genesis
+                } else if (ad.type === 'COLD_CLOUD') {
                     ad.mesh.rotation.y += 0.001;
+                    ad.mesh.rotation.x += 0.001;
                 } else if (ad.type === 'HOT_CLOUD') {
                     ad.mesh.rotation.x += 0.001;
                     ad.mesh.rotation.y += 0.003;
@@ -597,34 +632,27 @@
                 }
             });
 
-            document.getElementById('coord-display').innerText = 
-                `X:${camera.position.x.toFixed(1)} Y:${camera.position.y.toFixed(1)} Z:${camera.position.z.toFixed(1)}`;
-
             controls.update();
             renderer.render(scene, camera);
         }
 
         // --- UI INTERACTIONS ---
 
-        const eyeBtn = document.getElementById('toggle-ui-elements');
         const legendToggleBtn = document.getElementById('legend-toggle-btn');
         const spectroLegend = document.getElementById('spectroLegend');
         const outputPanel = document.getElementById('outputPanel');
         const logFeed = document.getElementById('log-feed');
         const promptInput = document.getElementById('prompt-input');
 
-        eyeBtn.onclick = () => {
-            const isHidden = legendToggleBtn.classList.contains('opacity-0');
-            if(isHidden) {
-                legendToggleBtn.classList.remove('opacity-0', 'translate-y-4');
-            } else {
-                legendToggleBtn.classList.add('opacity-0', 'translate-y-4');
-            }
+        legendToggleBtn.onclick = () => {
+            spectroLegend.classList.remove('hidden-panel');
+            legendToggleBtn.classList.add('opacity-0', 'pointer-events-none');
         };
 
-        legendToggleBtn.onclick = () => {
-            spectroLegend.classList.toggle('hidden-panel');
-        };
+        function closeLegend() {
+            spectroLegend.classList.add('hidden-panel');
+            legendToggleBtn.classList.remove('opacity-0', 'pointer-events-none');
+        }
 
         function toggleOutputPanel() {
             outputPanel.classList.toggle('hidden-bottom');

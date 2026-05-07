@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>aTELLEXa | Semantic Topology & Metastate GEMZ</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { margin: 0; background: #020205; color: #00ffcc; font-family: 'Courier New', Courier, monospace; overflow: hidden; }
+        #canvas-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+        .ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; pointer-events: none; }
+        
+        .interactzone { pointer-events: auto; background: rgba(0, 15, 20, 0.85); border: 1px solid rgba(0, 255, 204, 0.3); backdrop-filter: blur(12px); border-radius: 8px; }
+        
+        .spectro-scrollbar::-webkit-scrollbar { width: 4px; }
+        .spectro-scrollbar::-webkit-scrollbar-track { background: rgba(0, 40, 40, 0.5); }
+        .spectro-scrollbar::-webkit-scrollbar-thumb { background: #00ffcc; border-radius: 2px; }
+
+        .glitch-text { text-shadow: 2px 0 #ff00ff, -2px 0 #00ffff; animation: glitch 3s infinite; }
+        @keyframes glitch {
+            0% { transform: translate(0); }
+            20% { transform: translate(-1px, 1px); }
+            40% { transform: translate(-1px, -1px); }
+            60% { transform: translate(1px, 1px); }
+            80% { transform: translate(1px, -1px); }
+            100% { transform: translate(0); }
+        }
+
+        #overlay-vignette {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle, transparent 50%, rgba(0,0,0,0.9) 100%);
+            pointer-events: none; z-index: 2;
+        }
+
+        .terminal-header { font-size: 0.7rem; letter-spacing: 2px; color: rgba(0, 255, 204, 0.5); border-bottom: 1px solid rgba(0, 255, 204, 0.2); margin-bottom: 8px; padding-bottom: 4px; }
+        
+        .hidden-panel { opacity: 0; pointer-events: none; transform: translate(-20px, -50%); }
+        
+        .output-panel { transform: translate(-50%, 0); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s; }
+        .output-panel.hidden-bottom { transform: translate(-50%, 120%); opacity: 0; pointer-events: none; }
+
+        .data-node { border-left: 2px solid transparent; padding-left: 8px; margin-bottom: 4px; transition: all 0.2s; }
+        .data-node:hover { border-left: 2px solid #00ffcc; background: rgba(0,255,204,0.1); }
+    </style>
+</head>
+<body>
+
+    <script>
+        // ==========================================
+        // SHADER_LIB: Externalizable GLSL Shaders
+        // Move these to .glsl files in production.
+        // ==========================================
+        const SHADER_LIB = {
+            NebulaShader: {
+                uniforms: {
+                    time: { value: 0.0 },
+                    baseColor: { value: new THREE.Color(0xaa00ff) },
+                    nebulaColor: { value: new THREE.Color(0x00ccff) }
+                },
+                vertexShader: `
+                    varying vec2 vUv;
+                    varying vec3 vPosition;
+                    varying vec3 vNormal;
+                    void main() {
+                        vUv = uv;
+                        vPosition = position;
+                        vNormal = normalize(normalMatrix * normal);
+                        gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                    }
+                `,
+                fragmentShader: `
+                    uniform float time;
+                    uniform vec3 baseColor;
+                    uniform vec3 nebulaColor;
+                    varying vec2 vUv;
+                    varying vec3 vPosition;
+                    varying vec3 vNormal;
+
+                    vec3 mod289(vec3 x){return x - floor(x * (1.0 / 289.0)) * 289.0;}
+                    vec4 mod289(vec4 x){return x - floor(x * (1.0 / 289.0)) * 289.0;}
+                    vec4 permute(vec4 x){return mod289(((x*34.0)+1.0)*x);}
+                    vec4 taylorInvSqrt(vec4 r){return 1.79284291400159 - 0.85373472095314 * r;}
+
+                    float snoise(vec3 v) {
+                        const vec2  C = vec2(1.0/6.0, 1.0/3.0) ;
+                        const vec4  D = vec4(0.0, 0.5, 1.0, 2.0);
+                        vec3 i  = floor(v + dot(v, C.yyy) );
+                        vec3 x0 = v - i + dot(i, C.xxx) ;
+                        vec3 g = step(x0.yzx, x0.xyz);
+                        vec3 l = 1.0 - g;
+                        vec3 i1 = min( g.xyz, l.zxy );
+                        vec3 i2 = max( g.xyz, l.zxy );
+                        vec3 x1 = x0 - i1 + C.xxx;
+                        vec3 x2 = x0 - i2 + C.yyy;
+                        vec3 x3 = x0 - D.yyy;
+                        i = mod289(i);
+                        vec4 p = permute( permute( permute(
+                                    i.z + vec4(0.0, i1.z, i2.z, 1.0 ))
+                                + i.y + vec4(0.0, i1.y, i2.y, 1.0 ))
+                                + i.x + vec4(0.0, i1.x, i2.x, 1.0 ));
+                        float n_ = 0.142857142857;
+                        vec3  ns = n_ * D.wyz - p.xzw;
+                        vec4 j = p - 49.0 * floor(p * ns.z * ns.z);
+                        vec4 x_ = floor(j * ns.z);
+                        vec4 y_ = floor(j - 7.0 * x_ );
+                        vec4 x = x_ *ns.x + ns.yyyy;
+                        vec4 y = y_ *ns.x + ns.yyyy;
+                        vec4 h = 1.0 - abs(x) - abs(y);
+                        vec4 b0 = vec4( x.xy, y.xy );
+                        vec4 b1 = vec4( x.zw, y.zw );
+                        vec4 s0 = floor(b0)*2.0 + 1.0;
+                        vec4 s1 = floor(b1)*2.0 + 1.0;
+                        vec4 sh = -step(h, vec4(0.0));
+                        vec4 a0 = b0.xzyw + s0.xzyw*sh.xxyy ;
+                        vec4 a1 = b1.xzyw + s1.xzyw*sh.zzww ;
+                        vec3 p0 = vec3(a0.xy,h.x);
+                        vec3 p1 = vec3(a0.zw,h.y);
+                        vec3 p2 = vec3(a1.xy,h.z);
+                        vec3 p3 = vec3(a1.zw,h.w);
+                        vec4 norm = taylorInvSqrt(vec4(dot(p0,p0), dot(p1,p1), dot(p2, p2), dot(p3,p3)));
+                        p0 *= norm.x; p1 *= norm.y; p2 *= norm.z; p3 *= norm.w;
+                        vec4 m = max(0.6 - vec4(dot(x0,x0), dot(x1,x1), dot(x2,x2), dot(x3,x3)), 0.0);
+                        m = m * m;
+                        return 42.0 * dot( m*m, vec4( dot(p0,x0), dot(p1,x1), dot(p2,x2), dot(p3,x3) ) );
+                    }
+
+                    float fbm(vec3 p) {
+                        float v = 0.0; float a = 0.5; vec3 shift = vec3(100.0);
+                        for (int i = 0; i < 4; i++) { v += a * snoise(p); p = p * 2.0 + shift; a *= 0.5; }
+                        return v;
+                    }
+
+                    void main() {
+                        float fresnel = pow(1.0 - dot(vNormal, vec3(0.0, 0.0, 1.0)), 3.0);
+                        vec3 noisePos = vPosition * 2.5 + vec3(0.0, 0.0, time * 0.2);
+                        float n = fbm(noisePos);
+                        float cloud = smoothstep(-0.2, 0.6, n);
+                        vec3 color = mix(baseColor, nebulaColor, n * 0.5 + 0.5);
+                        float alpha = cloud * (1.0 - fresnel);
+                        gl_FragColor = vec4(color, alpha * 0.8);
+                    }
+                `
+            }
+        };
+    </script>
+
+    <div id="canvas-container"></div>
+    <div id="overlay-vignette"></div>
+
+    <div class="ui-layer">
+        <!-- Top Title Bar -->
+        <div class="absolute top-6 left-6 interactzone p-4 flex flex-col gap-1 border-l-4 border-[#ff00ff]">
+            <h1 class="text-2xl font-bold uppercase tracking-widest">aTELLEXa v3.0</h1>
+            <p class="text-[10px] opacity-70">SEMANTIC TOPOLOGY & METACOGNITIVE GEMZ</p>
+            <div class="flex gap-4 mt-2">
+                <div class="w-2 h-2 rounded-full bg-[#ff00ff] animate-pulse"></div>
+                <span id="axiom-status-text" class="text-[9px] uppercase tracking-tighter text-[#ff00ff]">VIEW: DEFAULT_TOPOLOGY // GEMZ: RENDERED</span>
+            </div>
+        </div>
+
+        <!-- Right Controls Stack -->
+        <div class="absolute top-6 right-6 flex flex-col items-end gap-[1em] z-50 pointer-events-none">
+            <!-- LITE Toggle -->
+            <button id="lite-toggle-btn" class="interactzone px-4 py-2 text-[10px] font-bold tracking-widest border-r-4 border-[#00ffcc] text-[#00ffcc] hover:bg-[#00ffcc] hover:text-black transition-all rounded-lg pointer-events-auto">
+                LITE: OFF
+            </button>
+
+            <!-- Toggleable Legend Button -->
+            <button id="legend-toggle-btn" class="interactzone px-4 py-2 text-[10px] font-bold tracking-widest border-l-4 border-[#ff00ff] transition-all duration-300 rounded-lg pointer-events-auto">
+                LEGEND
+            </button>
+
+            <!-- HERE / THERE Axiom Switchers -->
+            <button onclick="cycleAxiom(-1)" class="interactzone px-4 py-2 text-[10px] font-bold tracking-widest border-l-4 border-[#ff0044] text-[#ff0044] hover:bg-[#ff0044] hover:text-white transition-all duration-300 rounded-lg pointer-events-auto">
+                &lt; HERE
+            </button>
+
+            <button onclick="cycleAxiom(1)" class="interactzone px-4 py-2 text-[10px] font-bold tracking-widest border-r-4 border-[#0066ff] text-[#0066ff] hover:bg-[#0066ff] hover:text-white transition-all duration-300 rounded-lg pointer-events-auto">
+                THERE &gt;
+            </button>
+        </div>
+
+
+        <!-- Top Center Input Bar -->
+        <div class="absolute top-6 left-1/2 transform -translate-x-1/2 interactzone p-2 flex items-center gap-2 w-[500px] max-w-[90vw]">
+            <input type="text" id="prompt-input" placeholder="Inject concept or abstract connection..." 
+                   class="bg-black/50 border border-[#00ffcc]/30 p-2 text-sm w-full outline-none focus:border-[#ff00ff] text-[#00ffcc] pointer-events-auto rounded transition-colors">
+            <button onclick="reflectInput()" class="px-4 py-2 bg-purple-900/50 hover:bg-[#ff00ff] text-[#ff00ff] hover:text-black border border-purple-500 font-bold text-xs transition-all pointer-events-auto rounded tracking-widest">REFLECT</button>
+        </div>
+
+        <!-- Left Legend Panel -->
+        <div id="spectroLegend" class="absolute left-6 top-1/2 transform -translate-y-1/2 z-40 interactzone p-4 shadow-2xl flex flex-col gap-4 w-[320px] max-h-[60vh] overflow-y-auto spectro-scrollbar pointer-events-auto transition-all duration-300 hidden-panel">
+            <div class="terminal-header flex justify-between items-center">
+                <span id="legend-title">MANIFOLD_LEGEND (v3)</span>
+            </div>
+            <div id="legend-content" class="flex flex-col gap-2">
+                <!-- Legend items injected by JS -->
+            </div>
+        </div>
+
+        <!-- Bottom Collapsible Output Panel -->
+        <div id="outputPanel" class="output-panel hidden-bottom absolute bottom-24 left-1/2 w-[80%] max-w-4xl h-[30vh] interactzone flex flex-col shadow-2xl z-50 pointer-events-auto">
+            <div class="flex justify-between items-center p-3 border-b border-[#00ffcc]/30 bg-black/40 shrink-0">
+                <div class="flex items-center gap-3">
+                    <span class="text-[10px] text-[#ff00ff] font-black tracking-widest uppercase">METACOGNITIVE_OUTPUT_STREAM</span>
+                </div>
+                <button onclick="toggleOutputPanel()" class="text-[#00ffcc] hover:text-white font-bold px-2">✕</button>
+            </div>
+            <div id="log-feed" class="p-4 flex-grow overflow-y-auto spectro-scrollbar text-xs text-emerald-100 font-mono leading-relaxed flex flex-col gap-2">
+                <div class="opacity-50">[SYS] Awaiting metacognitive reflections...</div>
+            </div>
+        </div>
+
+        <!-- Bottom Status Bar -->
+        <div class="absolute bottom-6 left-6 flex items-end gap-4 pointer-events-none z-40">
+            <div class="interactzone px-4 py-2 flex items-center gap-6 pointer-events-auto rounded-full">
+                <button onclick="toggleOutputPanel()" class="text-[10px] font-bold tracking-widest text-[#ff00ff] hover:text-white">📝 LOGZ</button>
+            </div>
+        </div>
+        
+        <!-- Center Bottom Identity -->
+        <div class="absolute bottom-6 right-6 opacity-40 text-[9px] tracking-[0.4em] pointer-events-none uppercase border-b border-[#00ffcc]/30 pb-1">
+            TO aSEEKa, aSPARKa IN aDARKa
+        </div>
+    </div>
+
+    <script>
+        // --- GLOBALS & APP STATE ---
+        let scene, camera, renderer, controls;
+        let orbGroup = [];
+        let sharedGlowTex;
+        
+        // Mode State
+        let isLiteMode = false;
+        let currentViewIndex = 0;
+
+        // Expanded Data Sets representing Different "Views"
+        
+        const GALLERY_DATA_0 = [
+            // Target Token / Center Concept
+            { label: 'TARGET_TOKEN', type: 'COMPOSITE_CONCEPTS', color: 0xffcc00, color2: 0xffcc00, size: 14, x: 0, y: 0, z: 0, desc: 'Golden solid core bounded by spark lattice and orbiting moonz.' },
+            
+            // Cloud Family
+            { label: 'PLASMA_NODE', type: 'SHADER_CLOUD', color: 0xaa00ff, color2: 0x00ccff, size: 12, x: -10, y: 25, z: -35, desc: 'Complex GLSL fragment computation (Fallback to Holo).' },
+            { label: 'DARK_NEBULA', type: 'COLD_CLOUD', color: 0x3a0088, color2: 0x110022, size: 12, x: -35, y: -10, z: -25, desc: 'Obscure macro-event genesis state.' },
+            { label: 'SPARK_NEBULA', type: 'HOT_CLOUD', color: 0x00ffff, color2: 0xff00ff, size: 14, x: -30, y: 25, z: -20, desc: 'Highly charged probabilistic point-cloud.' },
+            { label: 'FOGZ', type: 'FOG_CLOUD', color: 0xff0055, size: 9, x: 35, y: -20, z: -15, desc: 'Ambiguous probabilistic region.' },
+            
+            // Simple Inline FX Family
+            { label: 'FUZZY_NODE', type: 'SIMPLE_FUZZY', color: 0xff8800, size: 8, x: -40, y: -25, z: 5, desc: 'Low-density, large-particle inline fog.' },
+            { label: 'SPARKLE_CORE', type: 'SIMPLE_SPARKLE', color: 0xffffff, color2: 0x00ffcc, size: 7, x: 5, y: -35, z: -15, desc: 'High-density twinkling inline particles.' },
+
+            // Subsystems
+            { label: 'ATOMZ', type: 'ATOMZ', color: 0xffcc00, size: 6, x: 30, y: -5, z: 25, desc: 'Dynamic energetic subsystems.' },
+            { label: 'SPHEROID_MOONZ', type: 'SPHEROID_MOONZ', color: 0x88ff00, size: 8, x: -15, y: 30, z: -10, desc: 'Dense, unbreakable conceptual node.' },
+            { label: 'GLASS_NUCLEUS', type: 'GLASS_NUCLEUS', color: 0xff7700, color2: 0xff00aa, size: 10, x: 40, y: 20, z: 15, desc: 'Transparent standard flow with solid sub-states.' },
+            { label: 'HOLO_CORE', type: 'WIRED_CORE', color: 0xffaa00, color2: 0xff0055, size: 9, x: -25, y: -25, z: 25, desc: 'Dense core bounded by rigid wireframe structure. aLIMITZa.' },
+            
+            // Metacognitive Boundaries
+            { label: 'HOLOZ_TETRA', type: 'META_ALPHA', color: 0xff0055, size: 1, x: 20, y: -25, z: -35, desc: 'Tetrahedron: Foundational base connection point.' },
+            { label: 'HOLOZ_OCTA', type: 'META_BETA', color: 0x88ff00, size: 1, x: 45, y: 5, z: -10, desc: 'Octahedron: Dual-pole conceptual state geometry.' },
+            { label: 'HOLOZ_ICOSA', type: 'META_GAMMA', color: 0x00ffcc, size: 1, x: -15, y: 40, z: 20, desc: 'Icosahedron: Complex, multi-faceted truth lattice.' },
+            { label: 'HOLOZ_DODECA', type: 'META_DELTA', color: 0xff00ff, size: 1, x: 15, y: -5, z: 45, desc: 'Dodecahedron: Complete metacognitive boundary node.' }
+        ];
+
+        const GALLERY_DATA_1 = [
+            // Axiom 1: A grid / structural truth (HERE)
+            { label: 'AXIOM_CORE', type: 'WIRED_CORE', color: 0xff0044, color2: 0xffffff, size: 12, x: 0, y: 0, z: 0, desc: 'Central structural truth lattice.' },
+            { label: 'NODE_ALPHA', type: 'META_ALPHA', color: 0xff0044, size: 8, x: -30, y: 15, z: 10, desc: 'Primary structural anchor.' },
+            { label: 'NODE_BETA', type: 'META_BETA', color: 0xff0044, size: 8, x: 30, y: 15, z: -10, desc: 'Secondary structural anchor.' },
+            { label: 'NODE_GAMMA', type: 'META_GAMMA', color: 0xff0044, size: 8, x: 0, y: -30, z: 20, desc: 'Tertiary structural anchor.' },
+            { label: 'GLASS_ANCHOR', type: 'GLASS_NUCLEUS', color: 0xffffff, color2: 0xff0044, size: 10, x: -35, y: -15, z: -25, desc: 'Transparent standard flow.' },
+            { label: 'SOLID_TRUTH', type: 'SPHEROID_MOONZ', color: 0xffaa00, size: 9, x: 35, y: -15, z: 25, desc: 'Dense, unbreakable node.' }
+        ];
+
+        const GALLERY_DATA_2 = [
+            // Axiom 2: Fluid state / Dream state (THERE)
+            { label: 'QUANTUM_CORE', type: 'SHADER_CLOUD', color: 0x0066ff, color2: 0x00ffcc, size: 14, x: 0, y: 0, z: 0, desc: 'Unresolved quantum state.' },
+            { label: 'DREAM_FOG', type: 'FOG_CLOUD', color: 0x0066ff, size: 12, x: 35, y: 25, z: -20, desc: 'Ambiguous probabilistic region.' },
+            { label: 'MEMORY_SPARK', type: 'SIMPLE_SPARKLE', color: 0x00ffcc, color2: 0xffffff, size: 10, x: -30, y: -25, z: 15, desc: 'High-density twinkling memory.' },
+            { label: 'FLUID_STATE', type: 'COLD_CLOUD', color: 0x110022, color2: 0x0066ff, size: 15, x: 25, y: -20, z: 30, desc: 'Obscure fluid dynamics.' },
+            { label: 'HOT_FLUX', type: 'HOT_CLOUD', color: 0x00ffff, color2: 0x0066ff, size: 13, x: -40, y: 15, z: -35, desc: 'Charged probabilistic cloud.' }
+        ];
+
+        const VIEWS = [GALLERY_DATA_0, GALLERY_DATA_1, GALLERY_DATA_2];
+        const VIEW_NAMES = ["DEFAULT_TOPOLOGY", "AXIOM_HERE: STRUCTURAL", "AXIOM_THERE: FLUID_STATE"];
+
+        function createGlowTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 128; canvas.height = 128;
+            const ctx = canvas.getContext('2d');
+            const grad = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
+            grad.addColorStop(0, 'rgba(255,255,255,1)');
+            grad.addColorStop(0.1, 'rgba(255,255,255,0.8)');
+            grad.addColorStop(0.4, 'rgba(255,255,255,0.2)');
+            grad.addColorStop(1, 'rgba(255,255,255,0)');
+            ctx.fillStyle = grad; ctx.fillRect(0, 0, 128, 128);
+            return new THREE.CanvasTexture(canvas);
+        }
+
+        function createLabel(text, sizeOrPos, isGem) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 512; canvas.height = 128;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = isGem ? 'rgba(255, 0, 255, 0.9)' : 'rgba(0, 255, 204, 0.9)'; 
+            ctx.font = 'bold 36px Courier New'; 
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillText(text, 256, 64);
+            const tex = new THREE.CanvasTexture(canvas);
+            const spriteMat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false });
+            const sprite = new THREE.Sprite(spriteMat);
+            
+            if (sizeOrPos instanceof THREE.Vector3) {
+                sprite.scale.set(8, 2, 1);
+                sprite.position.copy(sizeOrPos);
+            } else {
+                sprite.scale.set(sizeOrPos * 3, sizeOrPos * 0.75, 1);
+                sprite.position.y = -sizeOrPos - 3;
+            }
+            return sprite;
+        }
+
+        function createGem(geometry, color, size) {
+            const group = new THREE.Group();
+            const edges = new THREE.WireframeGeometry(geometry);
+            const lineMat = new THREE.LineBasicMaterial({ color: color, transparent: true, opacity: 0.8 });
+            const lines = new THREE.LineSegments(edges, lineMat);
+            group.add(lines);
+            const pointMat = new THREE.PointsMaterial({
+                color: color, size: size * 0.25, map: sharedGlowTex, 
+                transparent: true, blending: THREE.AdditiveBlending, depthWrite: false
+            });
+            const points = new THREE.Points(geometry, pointMat);
+            group.add(points);
+            return group;
+        }
+
+        function setupEnvironment() {
+            const ambient = new THREE.AmbientLight(0xffffff, 0.2); 
+            scene.add(ambient);
+            const spot1 = new THREE.DirectionalLight(0xffffff, 0.9); 
+            spot1.position.set(20, 50, 20); 
+            scene.add(spot1);
+            const spot2 = new THREE.DirectionalLight(0x00ffcc, 0.5); 
+            spot2.position.set(-20, -10, 30); 
+            scene.add(spot2);
+        }
+
+        // Clears all dynamic gallery elements before a rebuild
+        function clearGallery() {
+            orbGroup.forEach(orb => scene.remove(orb.group));
+            orbGroup = [];
+            scene.children = scene.children.filter(child => !child.userData.isConnectionLine);
+        }
+
+        function renderGallery() {
+            clearGallery();
+            const ACTIVE_DATA = VIEWS[currentViewIndex];
+
+            // Update UI Status Texts
+            document.getElementById('axiom-status-text').innerText = `VIEW: ${VIEW_NAMES[currentViewIndex]} // GEMZ: RENDERED`;
+            document.getElementById('legend-title').innerText = `MANIFOLD_LEGEND (${['v3', 'AXIOM 1', 'AXIOM 2'][currentViewIndex]})`;
+
+            ACTIVE_DATA.forEach(data => {
+                const group = new THREE.Group();
+                group.position.set(data.x, data.y, data.z);
+                let mainMesh = null;
+                let animData = { type: data.type, subMeshes: [] };
+
+                if (data.type === 'COMPOSITE_CONCEPTS') {
+                    mainMesh = new THREE.Group();
+                    // LITE MODE check: Translucent Standard Material vs Wireframe Basic Material
+                    const shellGeo = new THREE.SphereGeometry(data.size, 32, 32);
+                    const shellMat = isLiteMode 
+                        ? new THREE.MeshBasicMaterial({ color: data.color, wireframe: true, transparent: true, opacity: 0.15 })
+                        : new THREE.MeshStandardMaterial({ color: data.color, transparent: true, opacity: 0.2, roughness: 0.1, metalness: 0.8, depthWrite: false });
+                    mainMesh.add(new THREE.Mesh(shellGeo, shellMat));
+
+                    const polyGeo = new THREE.DodecahedronGeometry(data.size * 0.45, 0);
+                    const polyMat = isLiteMode
+                        ? new THREE.MeshBasicMaterial({ color: data.color, wireframe: true })
+                        : new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: data.color, emissiveIntensity: 1.5, metalness: 0.6, roughness: 0.2 });
+                    const polyhedron = new THREE.Mesh(polyGeo, polyMat);
+                    
+                    if(!isLiteMode) {
+                        const edgeMat = new THREE.LineBasicMaterial({ color: 0xffaa00, transparent: true, opacity: 0.5 });
+                        polyhedron.add(new THREE.LineSegments(new THREE.WireframeGeometry(polyGeo), edgeMat)); 
+                    }
+                    mainMesh.add(polyhedron);
+                    animData.core = polyhedron;
+
+                    const sparkGeo = new THREE.BufferGeometry(); const sparkPos = []; const sparkRadius = data.size * 1.05; 
+                    for(let i=0; i<44; i++){
+                        const u = Math.random(), v = Math.random();
+                        const theta = u * 2.0 * Math.PI, phi = Math.acos(2.0 * v - 1.0);
+                        sparkPos.push(sparkRadius * Math.sin(phi) * Math.cos(theta), sparkRadius * Math.sin(phi) * Math.sin(theta), sparkRadius * Math.cos(phi));
+                    }
+                    sparkGeo.setAttribute('position', new THREE.Float32BufferAttribute(sparkPos, 3));
+                    const sparkMat = new THREE.PointsMaterial({color: 0xffcc00, size: 0.88, map: sharedGlowTex, transparent: false, opacity: 1, depthWrite: false, blending: THREE.AdditiveBlending});
+                    const sparkSystem = new THREE.Points(sparkGeo, sparkMat); 
+                    mainMesh.add(sparkSystem);
+                    animData.sparks = sparkSystem;
+
+                    const moonsGroup = new THREE.Group(); const baseMoonR = data.size * 0.18;
+                    for (let m = 0; m < 10; m++) {
+                        const moonR = baseMoonR * (0.25 + Math.random() * 0.75);
+                        const moonGeo = new THREE.SphereGeometry(moonR, 16, 16);
+                        const greyVal = 64 + Math.floor(Math.random() * 128); 
+                        const moonColor = new THREE.Color(`rgb(${greyVal}, ${greyVal}, ${greyVal})`);
+                        const moonMat = isLiteMode 
+                            ? new THREE.MeshBasicMaterial({ color: moonColor })
+                            : new THREE.MeshStandardMaterial({ color: moonColor, roughness: 0.9, metalness: 0.2 });
+                        const moon = new THREE.Mesh(moonGeo, moonMat);
+                        const angle = (m / 10) * Math.PI * 2; const dist = data.size * 1.5 + Math.random() * 0.6;
+                        moon.position.set(Math.cos(angle) * dist, (Math.random() - 0.5) * 0.1, Math.sin(angle) * dist);
+                        moon.userData = { angle: angle, dist: dist, speed: 0.005 + Math.random()*0.015, yOffset: moon.position.y };
+                        moonsGroup.add(moon);
+                        animData.subMeshes.push(moon);
+                    }
+                    mainMesh.add(moonsGroup);
+
+                } else if (data.type === 'SHADER_CLOUD') {
+                    // Check if Shader is available and we are NOT in Lite mode
+                    if (!isLiteMode && SHADER_LIB.NebulaShader) {
+                        const geo = new THREE.SphereGeometry(data.size, 64, 64);
+                        const mat = new THREE.ShaderMaterial({
+                            uniforms: THREE.UniformsUtils.clone(SHADER_LIB.NebulaShader.uniforms),
+                            vertexShader: SHADER_LIB.NebulaShader.vertexShader,
+                            fragmentShader: SHADER_LIB.NebulaShader.fragmentShader,
+                            transparent: true, depthWrite: false, side: THREE.BackSide, blending: THREE.AdditiveBlending
+                        });
+                        mat.uniforms.baseColor.value = new THREE.Color(data.color);
+                        mat.uniforms.nebulaColor.value = new THREE.Color(data.color2);
+                        mainMesh = new THREE.Mesh(geo, mat);
+                        animData.shader = mat;
+                    } else {
+                        // FALLBACK: HOLOZ Wireframe
+                        mainMesh = createGem(new THREE.IcosahedronGeometry(data.size), data.color, data.size);
+                        animData.type = 'META_FALLBACK';
+                    }
+
+                // Simple inline shaders (Points) remain untouched in Lite mode
+                } else if (data.type === 'COLD_CLOUD' || data.type === 'SIMPLE_FUZZY') {
+                    const fogGeo = new THREE.BufferGeometry(); const fogPos = [];
+                    const pCount = data.type === 'SIMPLE_FUZZY' ? 40 : 80;
+                    for(let i=0; i<pCount; i++) {
+                        const r = data.size * Math.cbrt(Math.random());
+                        const theta = Math.random() * 2 * Math.PI, phi = Math.acos(2 * Math.random() - 1);
+                        fogPos.push(r * Math.sin(phi) * Math.cos(theta), r * Math.sin(phi) * Math.sin(theta), r * Math.cos(phi));
+                    }
+                    fogGeo.setAttribute('position', new THREE.Float32BufferAttribute(fogPos, 3));
+                    mainMesh = new THREE.Points(fogGeo, new THREE.PointsMaterial({ color: data.color, size: data.size * 1.5, map: sharedGlowTex, transparent: true, opacity: 0.35, depthWrite: false, blending: THREE.AdditiveBlending }));
+                    if (data.type === 'COLD_CLOUD') {
+                        const core = new THREE.Sprite(new THREE.SpriteMaterial({ map: sharedGlowTex, color: data.color2, transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending }));
+                        core.scale.set(data.size * 2, data.size * 2, 1);
+                        mainMesh.add(core);
+                    }
+
+                } else if (data.type === 'HOT_CLOUD') {
+                    const fogGeo = new THREE.BufferGeometry(); const fogPos = [];
+                    for(let i=0; i<200; i++) {
+                        const r = data.size * Math.cbrt(Math.random());
+                        const theta = Math.random() * 2 * Math.PI, phi = Math.acos(2 * Math.random() - 1);
+                        fogPos.push(r * Math.sin(phi) * Math.cos(theta), r * Math.sin(phi) * Math.sin(theta), r * Math.cos(phi));
+                    }
+                    fogGeo.setAttribute('position', new THREE.Float32BufferAttribute(fogPos, 3));
+                    mainMesh = new THREE.Points(fogGeo, new THREE.PointsMaterial({ color: data.color, size: data.size * 0.4, map: sharedGlowTex, transparent: true, opacity: 0.9, depthWrite: false, blending: THREE.AdditiveBlending }));
+                    const core = new THREE.Sprite(new THREE.SpriteMaterial({ map: sharedGlowTex, color: data.color2, transparent: true, blending: THREE.AdditiveBlending }));
+                    core.scale.set(data.size*1.5, data.size*1.5, 1);
+                    mainMesh.add(core);
+
+                } else if (data.type === 'FOG_CLOUD') {
+                    const fogGeo = new THREE.BufferGeometry(); const fogPos = [];
+                    for(let i=0; i<150; i++) {
+                        const r = data.size * Math.cbrt(Math.random());
+                        const theta = Math.random() * 2 * Math.PI, phi = Math.acos(2 * Math.random() - 1);
+                        fogPos.push(r * Math.sin(phi) * Math.cos(theta), r * Math.sin(phi) * Math.sin(theta), r * Math.cos(phi));
+                    }
+                    fogGeo.setAttribute('position', new THREE.Float32BufferAttribute(fogPos, 3));
+                    mainMesh = new THREE.Points(fogGeo, new THREE.PointsMaterial({ color: data.color, size: data.size*0.5, map: sharedGlowTex, transparent: true, opacity: 0.6, depthWrite: false, blending: THREE.AdditiveBlending }));
+
+                } else if (data.type === 'SIMPLE_SPARKLE') {
+                    const fogGeo = new THREE.BufferGeometry(); const fogPos = [];
+                    for(let i=0; i<400; i++) {
+                        const r = data.size * Math.cbrt(Math.random());
+                        const theta = Math.random() * 2 * Math.PI, phi = Math.acos(2 * Math.random() - 1);
+                        fogPos.push(r * Math.sin(phi) * Math.cos(theta), r * Math.sin(phi) * Math.sin(theta), r * Math.cos(phi));
+                    }
+                    fogGeo.setAttribute('position', new THREE.Float32BufferAttribute(fogPos, 3));
+                    mainMesh = new THREE.Points(fogGeo, new THREE.PointsMaterial({ color: data.color, size: data.size*0.15, map: sharedGlowTex, transparent: true, opacity: 0.9, depthWrite: false, blending: THREE.AdditiveBlending }));
+
+                } else if (data.type === 'ATOMZ') {
+                    const mat = isLiteMode ? new THREE.MeshBasicMaterial({color: data.color}) : new THREE.MeshStandardMaterial({ color: data.color, emissive: data.color, emissiveIntensity: 1.0 });
+                    mainMesh = new THREE.Mesh(new THREE.SphereGeometry(data.size * 0.4, 16, 16), mat);
+                    for (let m = 0; m < 5; m++) {
+                        const moonMat = isLiteMode ? new THREE.MeshBasicMaterial({color: 0xffffff}) : new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: data.color, emissiveIntensity: 0.5 });
+                        const moon = new THREE.Mesh(new THREE.SphereGeometry(data.size * 0.15, 16, 16), moonMat);
+                        moon.userData = { angle: (m/5)*Math.PI*2, dist: data.size * 1.5, speed: 0.02 + Math.random()*0.02, yOffset: (Math.random()-0.5)*data.size };
+                        mainMesh.add(moon); animData.subMeshes.push(moon);
+                    }
+
+                } else if (data.type === 'SPHEROID_MOONZ') {
+                    const mat = isLiteMode ? new THREE.MeshBasicMaterial({color: data.color, wireframe: true}) : new THREE.MeshStandardMaterial({ color: data.color, emissive: data.color, emissiveIntensity: 0.2, roughness: 0.8, metalness: 0.2 });
+                    mainMesh = new THREE.Mesh(new THREE.SphereGeometry(data.size, 32, 32), mat);
+                    for (let m = 0; m < 8; m++) {
+                        const mMat = isLiteMode ? new THREE.MeshBasicMaterial({color: 0xffffff}) : new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: data.color, emissiveIntensity: 0.8 });
+                        const mMesh = new THREE.Mesh(new THREE.SphereGeometry(data.size * 0.15, 8, 8), mMat);
+                        const phi = Math.acos(-1 + (2 * m) / 8), theta = Math.sqrt(8 * Math.PI) * phi;
+                        mMesh.position.setFromSphericalCoords(data.size, phi, theta);
+                        mainMesh.add(mMesh);
+                    }
+
+                } else if (data.type === 'GLASS_NUCLEUS') {
+                    const mat = isLiteMode ? new THREE.MeshBasicMaterial({color: data.color, transparent: true, opacity: 0.2, wireframe: true}) : new THREE.MeshPhysicalMaterial({ color: data.color, transparent: true, opacity: 0.35, roughness: 0.1, metalness: 0.2, clearcoat: 1.0, clearcoatRoughness: 0.1, depthWrite: false });
+                    mainMesh = new THREE.Mesh(new THREE.SphereGeometry(data.size, 32, 32), mat);
+                    for(let i=0; i<5; i++) {
+                        const sMat = isLiteMode ? new THREE.MeshBasicMaterial({color: data.color2}) : new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: data.color2, emissiveIntensity: 1.0 });
+                        const sMesh = new THREE.Mesh(new THREE.SphereGeometry(data.size * 0.25, 16, 16), sMat);
+                        sMesh.position.set((Math.random()-0.5)*data.size*1.2, (Math.random()-0.5)*data.size*1.2, (Math.random()-0.5)*data.size*1.2);
+                        mainMesh.add(sMesh); animData.subMeshes.push(sMesh);
+                    }
+
+                } else if (data.type === 'WIRED_CORE') {
+                    mainMesh = new THREE.LineSegments(new THREE.WireframeGeometry(new THREE.SphereGeometry(data.size, 12, 12)), new THREE.LineBasicMaterial({ color: data.color, transparent: true, opacity: 0.5 }));
+                    const coreMat = isLiteMode ? new THREE.MeshBasicMaterial({color: data.color2}) : new THREE.MeshStandardMaterial({ color: data.color2, emissive: data.color2, emissiveIntensity: 0.5, metalness: 0.8, roughness: 0.2 });
+                    const coreMesh = new THREE.Mesh(new THREE.IcosahedronGeometry(data.size * 0.4), coreMat);
+                    mainMesh.add(coreMesh); animData.subMeshes.push(coreMesh);
+
+                } else if (data.type === 'META_ALPHA') { mainMesh = createGem(new THREE.TetrahedronGeometry(data.size), data.color, data.size);
+                } else if (data.type === 'META_BETA') { mainMesh = createGem(new THREE.OctahedronGeometry(data.size), data.color, data.size);
+                } else if (data.type === 'META_GAMMA') { mainMesh = createGem(new THREE.IcosahedronGeometry(data.size), data.color, data.size);
+                } else if (data.type === 'META_DELTA') { mainMesh = createGem(new THREE.DodecahedronGeometry(data.size), data.color, data.size); }
+
+                if (mainMesh) { group.add(mainMesh); animData.mesh = mainMesh; }
+                const isGem = data.type.startsWith('META_');
+                group.add(createLabel(data.label, data.size, isGem));
+                scene.add(group); orbGroup.push({ group, animData, ...data });
+            });
+
+            // Re-draw connections between Metacognitive GEMZ
+            const gemz = orbGroup.filter(o => o.type.startsWith('META_'));
+            for(let i=0; i<gemz.length; i++) {
+                for(let j=i+1; j<gemz.length; j++) {
+                    const line = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(gemz[i].x, gemz[i].y, gemz[i].z), new THREE.Vector3(gemz[j].x, gemz[j].y, gemz[j].z)]), new THREE.LineBasicMaterial({ color: 0xff00ff, transparent: true, opacity: 0.15 }));
+                    line.userData.isConnectionLine = true;
+                    scene.add(line);
+                }
+            }
+            populateLegend();
+        }
+
+        function initGallery() {
+            scene = new THREE.Scene();
+            scene.fog = new THREE.FogExp2(0x020205, 0.005);
+
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 30, 100);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.autoRotate = true;
+            controls.autoRotateSpeed = 0.3;
+
+            sharedGlowTex = createGlowTexture();
+            setupEnvironment();
+            renderGallery();
+
+            window.addEventListener('resize', onWindowResize, false);
+            animate();
+        }
+
+        function populateLegend() {
+            const legendContainer = document.getElementById('legend-content');
+            legendContainer.innerHTML = ''; // Clear prior legend items
+            const ACTIVE_DATA = VIEWS[currentViewIndex];
+            ACTIVE_DATA.forEach(d => {
+                const isGem = d.type.startsWith('META_');
+                const item = document.createElement('div');
+                item.className = `flex items-center gap-3 p-2 rounded cursor-pointer hover:bg-white/5 transition-all border border-transparent hover:border-[${isGem ? '#ff00ff' : '#00ffcc'}]/30`;
+                item.innerHTML = `
+                    <div class="w-3 h-3 shrink-0 ${isGem ? 'rotate-45' : 'rounded-sm'}" style="background: #${d.color.toString(16).padStart(6, '0')}; box-shadow: 0 0 10px #${d.color.toString(16).padStart(6, '0')};"></div>
+                    <div class="flex flex-col">
+                        <span class="text-[10px] font-bold tracking-wider" style="color: #${isGem ? 'ff00ff' : d.color.toString(16).padStart(6, '0')}">${d.type}</span>
+                        <span class="text-[8px] opacity-70">${d.desc}</span>
+                    </div>
+                `;
+                item.onclick = () => focusOn(d.label);
+                legendContainer.appendChild(item);
+            });
+        }
+
+        function focusOn(label) {
+            const target = orbGroup.find(o => o.label === label);
+            if(target) {
+                controls.autoRotate = false;
+                camera.position.set(target.x + 25, target.y + 15, target.z + 35);
+                controls.target.set(target.x, target.y, target.z);
+                addLog(`Focused on Topology: ${target.type} [${target.label}]`, 'info');
+            }
+        }
+
+        function cycleAxiom(dir) {
+            currentViewIndex += dir;
+            if (currentViewIndex < 0) currentViewIndex = VIEWS.length - 1;
+            if (currentViewIndex >= VIEWS.length) currentViewIndex = 0;
+            
+            addLog(`>> DIMENSIONAL SHIFT -> Switched to ${VIEW_NAMES[currentViewIndex]}`, 'metastate');
+            
+            // Re-render entirely with new dataset
+            renderGallery();
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            const time = performance.now() * 0.001;
+
+            orbGroup.forEach((orbObj, idx) => {
+                const ad = orbObj.animData;
+                orbObj.group.position.y = orbObj.y + Math.sin(time + idx) * 2;
+
+                if (ad.type === 'COMPOSITE_CONCEPTS') {
+                    if (ad.core) { ad.core.rotation.x += 0.005; ad.core.rotation.y += 0.01; }
+                    if (ad.sparks) { ad.sparks.rotation.y -= 0.002; ad.sparks.rotation.z += 0.001; }
+                    ad.subMeshes.forEach(moon => {
+                        moon.userData.angle += moon.userData.speed;
+                        moon.position.x = Math.cos(moon.userData.angle) * moon.userData.dist;
+                        moon.position.z = Math.sin(moon.userData.angle) * moon.userData.dist;
+                        moon.position.y = moon.userData.yOffset + Math.sin(time*2 + moon.userData.angle)*0.5;
+                    });
+                } else if (ad.type === 'SHADER_CLOUD' && ad.shader) {
+                    ad.shader.uniforms.time.value = time * 0.5;
+                    ad.mesh.rotation.y += 0.002;
+                } else if (ad.type === 'COLD_CLOUD' || ad.type === 'HOT_CLOUD' || ad.type === 'FOG_CLOUD' || ad.type === 'SIMPLE_FUZZY') {
+                    ad.mesh.rotation.y += 0.001;
+                } else if (ad.type === 'SIMPLE_SPARKLE') {
+                    ad.mesh.rotation.y -= 0.005;
+                    ad.mesh.rotation.x += 0.002;
+                } else if (ad.type === 'ATOMZ') {
+                    ad.mesh.rotation.y += 0.01;
+                    ad.subMeshes.forEach(moon => {
+                        moon.userData.angle += moon.userData.speed;
+                        moon.position.x = Math.cos(moon.userData.angle) * moon.userData.dist;
+                        moon.position.z = Math.sin(moon.userData.angle) * moon.userData.dist;
+                        moon.position.y = moon.userData.yOffset + Math.sin(time*2 + moon.userData.angle)*0.5;
+                    });
+                } else if (ad.type === 'GLASS_NUCLEUS') {
+                    ad.mesh.rotation.y += 0.005;
+                    ad.subMeshes.forEach((sub, sIdx) => { sub.position.y += Math.sin(time * 2 + sIdx) * 0.02; });
+                } else if (ad.type === 'META_FALLBACK' || ad.type.startsWith('META_')) {
+                    ad.mesh.rotation.x += 0.004; ad.mesh.rotation.y += 0.006;
+                }
+            });
+
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        // --- UI UTILS ---
+        const liteToggleBtn = document.getElementById('lite-toggle-btn');
+        const legendToggleBtn = document.getElementById('legend-toggle-btn');
+        const spectroLegend = document.getElementById('spectroLegend');
+        const outputPanel = document.getElementById('outputPanel');
+        const logFeed = document.getElementById('log-feed');
+        const promptInput = document.getElementById('prompt-input');
+
+        liteToggleBtn.onclick = () => {
+            isLiteMode = !isLiteMode;
+            liteToggleBtn.innerText = `LITE: ${isLiteMode ? 'ON' : 'OFF'}`;
+            liteToggleBtn.classList.toggle('bg-[#00ffcc]');
+            liteToggleBtn.classList.toggle('text-black');
+            liteToggleBtn.classList.toggle('text-[#00ffcc]');
+            addLog(`[SYS] LITE_MODE toggled ${isLiteMode ? 'ON (Holo/Simple Fallbacks)' : 'OFF (Complex Shaders)'}`, 'info');
+            renderGallery();
+        };
+
+        let toggleLEGEND = false; // is panel visible?
+        legendToggleBtn.onclick = () => {
+            if(toggleLEGEND){
+                toggleLEGEND = false;
+                spectroLegend.classList.add('hidden-panel');
+            } else {
+                toggleLEGEND = true;
+                spectroLegend.classList.remove('hidden-panel');
+            }
+        };
+        
+        function toggleOutputPanel() { outputPanel.classList.toggle('hidden-bottom'); }
+        function addLog(msg, type = 'info') {
+            const div = document.createElement('div');
+            div.className = 'data-node border-l-2';
+            const timestamp = new Date().toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            let colorClass = 'text-emerald-300';
+            if(type === 'reflection') colorClass = 'text-yellow-400 font-bold';
+            if(type === 'metastate') colorClass = 'text-[#ff00ff] font-bold';
+            div.innerHTML = `<span class="opacity-40">[${timestamp}]</span> <span class="${colorClass}">${msg}</span>`;
+            logFeed.prepend(div);
+            if (logFeed.children.length > 30) logFeed.lastChild.remove();
+        }
+
+        function reflectInput() {
+            const val = promptInput.value.trim();
+            if (!val) return;
+            const ACTIVE_DATA = VIEWS[currentViewIndex];
+            const randomManifold = ACTIVE_DATA[Math.floor(Math.random() * ACTIVE_DATA.length)];
+            addLog(`> INJECTED: [${val}]`, 'info');
+            addLog(`>> REFLECTION MAPPED -> Semantic Topology matched to ${randomManifold.type}`, 'reflection');
+            outputPanel.classList.remove('hidden-bottom');
+            focusOn(randomManifold.label);
+            promptInput.value = '';
+        }
+
+        promptInput.addEventListener('keypress', e => { if (e.key === 'Enter') reflectInput(); });
+        window.onload = () => {
+            initGallery();
+            addLog("[SYS] Semantic Topology Gallery Online.");
+            addLog("[SYS] Metacognitive GEMZ Layer Initialized.");
+        };
+    </script>
+</body>
+</html>

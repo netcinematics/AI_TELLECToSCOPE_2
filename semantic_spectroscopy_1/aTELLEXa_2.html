@@ -3,1764 +3,590 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ATELLECTASCOPEA | Meta-Spectroscopy View</title>
+    <title>aTELLEXa | Semantic Topology & Metastate GEMZ</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { margin: 0; background: #050505; color: #00ffcc; font-family: 'Courier New', Courier, monospace; overflow: hidden; }
+        body { margin: 0; background: #020205; color: #00ffcc; font-family: 'Courier New', Courier, monospace; overflow: hidden; }
         #canvas-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
         .ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; pointer-events: none; }
         
-        .interactzone { pointer-events: auto; background: rgba(0, 20, 20, 0.85); border: 1px solid rgba(0, 255, 204, 0.3); backdrop-filter: blur(12px); border-radius: 12px; }
+        .interactzone { pointer-events: auto; background: rgba(0, 15, 20, 0.85); border: 1px solid rgba(0, 255, 204, 0.3); backdrop-filter: blur(12px); border-radius: 8px; }
         
-        .reel-container { display: flex; width: 100%; align-items: stretch; border-color: rgba(0, 255, 204, 0.3); border-radius: 12px; }
-        .nav-arrow { width: 45px; background: rgba(0, 30, 30, 0.9); border: 1px solid rgba(0, 255, 204, 0.3); color: #00ffcc; font-size: 22px; font-weight: bold; cursor: pointer; transition: all 0.2s; z-index: 20; margin: 4px; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
-        .nav-arrow:hover { background: rgba(0, 255, 204, 0.2); color: #fff; border-color: #00ffcc; box-shadow: 0 0 15px rgba(0, 255, 204, 0.4); }
-        
-        .reel { height: 120px; flex-grow: 1; overflow-x: auto; display: flex; align-items: center; gap: 14px; padding: 10px 10px; scrollbar-width: none; scroll-behavior: smooth; border-radius: 12px; }
-        .reel::-webkit-scrollbar { display: none; }
-        .reel-item { display: flex; flex-direction: column; align-items: center; width: 95px; flex-shrink: 0; justify-content: center; gap: 6px; }
-        
-        .spheroid-btn { 
-            width: 100%; 
-            height: 60px; 
-            border-radius: 14px; 
-            background: rgba(0, 15, 15, 0.9); 
-            border: 2px solid rgba(0, 255, 204, 0.3); 
-            cursor: pointer; 
-            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); 
-            position: relative; 
-            box-shadow: inset 0 0 20px rgba(0, 255, 204, 0.15), inset 0 0 5px rgba(0, 255, 204, 0.3);
-            overflow: hidden;
-        }
-        .spheroid-btn:not(.empty-frame):hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(0, 255, 204, 0.3), inset 0 0 25px rgba(0, 255, 204, 0.5); border-color: #00ffcc; }
-        .empty-frame { border-color: rgba(0, 255, 204, 0.1) !important; cursor: default; box-shadow: none !important; opacity: 0.3; }
-        
-        .reel-label { font-size: 13px; font-weight: 900; text-transform: uppercase; color: #00b38f; text-align: center; width: 100%; display: block; transition: color 0.3s; }
-        .reel-item:hover .reel-label:not(.empty-label) { color: #fff; text-shadow: 0 0 5px #00ffcc;}
-        .empty-label { color: #004433 !important; }
+        .spectro-scrollbar::-webkit-scrollbar { width: 4px; }
+        .spectro-scrollbar::-webkit-scrollbar-track { background: rgba(0, 40, 40, 0.5); }
+        .spectro-scrollbar::-webkit-scrollbar-thumb { background: #00ffcc; border-radius: 2px; }
 
-        input, select { background: rgba(0, 20, 20, 0.9); color: #00ffcc; border: 1px solid rgba(0, 255, 204, 0.4); outline: none; font-size: 13px; padding: 6px; border-radius: 6px; }
-        .glow-text { text-shadow: 0 0 12px rgba(0, 255, 204, 0.8); color: #00ffcc; }
-        
-        .title-select {
-            appearance: none;
-            background: transparent url('data:image/svg+xml;utf8,<svg fill="%2300ffcc" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>') no-repeat right center;
-            background-size: 24px;
-            padding-right: 2.5em; 
-            border: none;
-            color: #00ffcc;
-            font-size: 1.5rem;
-            line-height: 2rem;
-            font-weight: 900;
-            letter-spacing: -0.05em;
-            text-transform: uppercase;
-            text-shadow: 0 0 12px rgba(0, 255, 204, 0.8);
-            outline: none;
-            cursor: pointer;
-            margin-top: 0.15rem;
-            width: auto;
-            min-width: 150px;
-            max-width: 100%;
+        .scanline {
+            width: 100%; height: 2px; background: rgba(0, 255, 204, 0.05);
+            position: absolute; animation: scan 6s linear infinite; pointer-events: none; z-index: 5;
         }
-        .title-select option { background: #001a1a; color: #00ffcc; font-size: 1rem; letter-spacing: normal; }
+        @keyframes scan { from { top: 0; } to { top: 100%; } }
 
-        #DETAILS_PANEL { position: absolute; top: 238px; right: 10px; width: 260px; z-index: 50; border-top: 2px solid #00ffcc; }
-        #LEGEND_PANEL { 
-            position: absolute; top: 222px; left: 30px; width: 244px; 
-            z-index: 50; border-top: 2px solid #00ffcc; 
-            max-height: 388px; overflow-y: scroll;
-        }
-        
-        #outputPanel {
-            position: absolute; 
-            bottom: 3em; 
-            left: 50%; 
-            transform: translateX(-50%); 
-            width: 88%; 
-            height: 33vh; 
-            z-index: 110; 
-            transition: height 0.3s ease-in-out;
+        .glitch-text { text-shadow: 2px 0 #ff00ff, -2px 0 #00ffff; animation: glitch 3s infinite; }
+        @keyframes glitch {
+            0% { transform: translate(0); }
+            20% { transform: translate(-1px, 1px); }
+            40% { transform: translate(-1px, -1px); }
+            60% { transform: translate(1px, 1px); }
+            80% { transform: translate(1px, -1px); }
+            100% { transform: translate(0); }
         }
 
-        .rounded-b-none { border-bottom-left-radius: 0 !important; border-bottom-right-radius: 0 !important; }
-        .rounded-t-none { border-top-left-radius: 0 !important; border-top-right-radius: 0 !important; }
+        #overlay-vignette {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle, transparent 50%, rgba(0,0,0,0.9) 100%);
+            pointer-events: none; z-index: 2;
+        }
+
+        .terminal-header { font-size: 0.7rem; letter-spacing: 2px; color: rgba(0, 255, 204, 0.5); border-bottom: 1px solid rgba(0, 255, 204, 0.2); margin-bottom: 8px; padding-bottom: 4px; }
         
-        .mock-metatext {
-            position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-            padding: 4px; font-size: 7px; line-height: 1.1; color: #aaffea;
-            font-family: monospace; text-align: left; opacity: 0.8;
-            background: rgba(0,20,20,0.5); word-break: break-all;
-        }
-        .mock-wordz {
-            position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-            padding: 4px; font-size: 10px; font-weight: 900; color: #fff;
-            text-align: center; text-shadow: 0 0 5px #00ffcc;
-        }
+        .hidden-panel { opacity: 0; pointer-events: none; transform: translate(-20px, -50%); }
+        
+        .output-panel { transform: translate(-50%, 0); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s; }
+        .output-panel.hidden-bottom { transform: translate(-50%, 120%); opacity: 0; pointer-events: none; }
 
-        #loadingOverlay {
-            position: absolute; inset: 0; 
-            background: rgba(5, 5, 5, 0.6); 
-            backdrop-filter: blur(8px);
-            z-index: 100;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            color: #00ffcc; font-family: 'Courier New', Courier, monospace;
-        }
-        .spinner {
-            width: 60px; height: 60px;
-            border: 6px solid rgba(218, 112, 214, 0.4);
-            border-top: 6px solid #00ffcc;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-bottom: 20px;
-            box-shadow: 0 0 15px rgba(0, 255, 204, 0.5);
-        }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .loading-text {
-            font-size: 1.2rem; font-weight: bold; letter-spacing: 2px;
-            text-shadow: 0 0 10px #00ffcc;
-            animation: pulse 1.5s infinite;
-            text-transform: uppercase;
-        }
-        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
-
-        /* Custom Scrollbar for Legend/Panels to keep them sleek */
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-        @media (max-width: 768px) {
-            .title-select { font-size: 1.1rem; padding-right: 20px; min-width: 110px; }
-            .nav-arrow { width: 30px; font-size: 16px; }
-            #topMenuContainer .flex-row { flex-wrap: wrap; }
-            #topMenuContainer > div > div { margin-bottom: 0.5rem; }
-            .spheroid-btn { height: 45px; }
-            #DETAILS_PANEL { width: 80%; top: 300px; right: 5%; }
-            #LEGEND_PANEL { width:60%; top: 222px; left: 5%; }
-            #outputPanel { bottom: 6em; }
-        }
+        .data-node { border-left: 2px solid transparent; padding-left: 8px; margin-bottom: 4px; transition: all 0.2s; }
+        .data-node:hover { border-left: 2px solid #00ffcc; background: rgba(0,255,204,0.1); }
     </style>
 </head>
 <body>
 
-    <div id="loadingOverlay">
-        <button onclick="forceCloseLoading()" class="absolute top-4 right-6 text-red-500 hover:text-white font-bold text-3xl transition-colors z-[105]" title="Bypass LLM Load">✕</button>
-        <div class="spinner"></div>
-        <div class="loading-text" id="loadingOverlayText">loading LLM...</div>
-        <div id="loadingTimer" class="mt-4 text-emerald-400 font-mono text-lg font-bold text-center">0.0s<br><span class="text-xs text-emerald-700 mt-2 block">Loading Brains: 1st init takes the longest!</span></div>
-    </div>
-
     <div id="canvas-container"></div>
+    <div id="overlay-vignette"></div>
+    <div class="scanline"></div>
 
-    <button id="toggleDetailsBtn" onclick="enableDetails()" class="absolute z-50 text-[10px] font-bold tracking-widest text-emerald-400 hover:text-black border border-emerald-600/50 hover:bg-emerald-400 bg-emerald-900/30 px-3 py-1 rounded transition-colors shadow-lg shadow-black/50 interactzone" style="top: 238px; right: 10px;">👁 DETAILS</button>
-    <button id="toggleLEGENDBtn" onclick="enableLEGEND()" class="absolute z-50 text-[10px] font-bold tracking-widest text-emerald-400 hover:text-black border border-emerald-600/50 hover:bg-emerald-400 bg-emerald-900/30 px-3 py-1 rounded transition-colors shadow-lg shadow-black/50 interactzone" style="top: 238px; left: 10px;">👁 LEGEND</button>
-
-    <div class="ui-layer flex flex-col justify-between p-2 sm:p-4">
-        
-        <!-- NEW INJECTED SPECTROSCOPY LEGEND (MIRRORED TO INFO_PANEL AND SCROLLABLE) -->
-        <div id="LEGEND_PANEL" class="hidden interactzone p-4 shadow-2xl">
-            <div class="flex justify-between items-start mb-4">
-                <h3 class="text-emerald-400 font-black uppercase text-sm tracking-widest glow-text">AI SPECTROSCOPY</h3>
-                <button onclick="userCloseLEGEND()" class="text-emerald-700 hover:text-white text-sm">✕</button>
-            </div>
-
-            <!-- ORBZ Morphology -->
-            <div class="flex flex-col gap-3 text-[10px] shrink-0">
-                <span class="text-purple-400 font-bold tracking-widest mb-1 border-b border-purple-900/30 pb-1">ORBZ_MORPHOLOGY</span>
-                
-                <div class="flex justify-start items-center gap-3">
-                    <div class="w-3 h-3 rounded-full bg-yellow-500 shadow-[0_0_8px_#ffaa00] shrink-0"></div>
-                    <div class="flex-1 leading-tight"><span class="text-yellow-400 font-bold">AXIOMA (CORE_CONCEPT)</span>
-                        <br><span class="text-emerald-700 text-[9px]">Active TARGET_TOKEN in FOCUS.</span></div>
-                </div>
-
-                <div class="flex justify-start items-center gap-3">
-                    <div class="w-3 h-3 rounded-full bg-yellow-500 shadow-[0_0_8px_#ffaa00] shrink-0"></div>
-                    <div class="flex-1 leading-tight"><span class="text-yellow-400 font-bold">LIGHT_NEBULA (EMERGENT_CONCEPT)</span>
-                        <br><span class="text-emerald-700 text-[9px]">Newly REFLECT ACTUAL_REALITY (aEN).</span></div>
-                </div>
-
-                <div class="flex justify-start items-center gap-3">
-                    <div class="w-3 h-3 rounded-full bg-red-900/60 blur-[1px] border border-red-500/50 shrink-0"></div>
-                    <div class="flex-1 leading-tight"><span class="text-red-400 font-bold">DARK_NEBULA (FOGGY_CONCEPT)</span>
-                        <br><span class="text-emerald-700 text-[9px]">Newly CLOUDY DIS_ACTUAL_REALITY (aDIS)</span></div>
-                </div>
-
-                <div class="flex justify-start items-center gap-3">
-                    <div class="w-3 h-3 rounded-full border border-emerald-400 border-dashed shrink-0 bg-emerald-900/40"></div>
-                    <div class="flex-1 leading-tight"><span class="text-emerald-400 font-bold">COMPLEXIGON (LATTICE )</span>
-                        <br><span class="text-emerald-700 text-[9px]">COMPOSITE CLUSTER_CONCEPTS.</span></div>
-                </div>
-
-                <div class="flex justify-start items-center gap-3">
-                    <div class="w-3 h-3 rounded-full border border-cyan-500 bg-black flex items-center justify-center shrink-0"><div class="w-1 h-1 bg-cyan-300 rounded-full"></div></div>
-                    <div class="flex-1 leading-tight"><span class="text-cyan-400 font-bold">HOLO_SPHERES (LOW COMPOSITE_CONCEPTS)</span>
-                        <br><span class="text-emerald-700 text-[9px]">Hidden or Missing internal vectors.</span></div>
-                </div>
-                
-                <div class="flex justify-start items-center gap-3">
-                    <div class="w-3 h-3 rounded-full bg-gradient-to-br from-gray-300 to-gray-600 border border-gray-400 shrink-0"></div>
-                    <div class="flex-1 leading-tight"><span class="text-gray-400 font-bold">GEMZ (METALLIC in GLASS)</span>
-                        <br><span class="text-emerald-700 text-[9px]">Triangulated Gemstone of CONCEPT into AXIOMZ.</span></div>
-                </div>
-            </div>
-
-            <!-- Dimensional Axis -->
-            <div class="flex flex-col gap-2 text-[10px] mt-2 shrink-0">
-                <span class="text-blue-400 font-bold tracking-widest mb-1 border-b border-blue-900/30 pb-1">DYNAMIC_AXIS_TYPES</span>
-                
-                <div class="flex flex-col mb-1">
-                    <span class="text-red-400 font-bold tracking-wider">X: POLARITY</span>
-                    <span class="text-emerald-700 text-[9px] font-mono">[ ALPHA ] <---> [ NOISE ]</span>
-                </div>
-                <div class="flex flex-col mb-1">
-                    <span class="text-emerald-400 font-bold tracking-wider">Y: RELEVANCE</span>
-                    <span class="text-emerald-700 text-[9px] font-mono">[ CORE ] <---> [ THEORY ]</span>
-                </div>
-                <div class="flex flex-col">
-                    <span class="text-cyan-400 font-bold tracking-wider">Z: CHRONOS</span>
-                    <span class="text-emerald-700 text-[9px] font-mono">[ FUTURE ] <---> [ PAST ]</span>
-                </div>
-            </div>
-        </div>
-        <!-- END OF LEGEND -->
-
-        <div id="topMenuContainer" class="flex flex-col">
-            <div class="flex items-center justify-between interactzone rounded-b-none px-4 sm:px-6 py-3 border-b border-emerald-500/30 flex-wrap gap-y-2">
-                
-                <div class="flex flex-col flex-1 min-w-[120px]">
-                    <span class="text-[10px] text-purple-400 tracking-[0.4em] font-black">METASTATE_NAV</span>
-                    <select id="domainSelect" onchange="switchDomain(this.value)" class="title-select">
-                        <option value="FINANCIAL" selected>FINANCIAL</option>
-                        <option value="MEDICAL">MEDICAL</option>
-                    </select>
-                </div>
-                
-                <div class="flex justify-center items-center flex-[2] min-w-[250px] px-2">
-                    <div class="flex items-center w-full max-w-2xl">
-                        <input id="addTopic" type="text" placeholder="target_topic" class="w-full text-center focus:border-emerald-400 transition-colors" style="color: steelblue; background: rgba(0, 15, 15, 0.7); border-radius: 40px; border: 1px solid rgba(0, 255, 204, 0.4); box-shadow: inset 0 0 10px rgba(0, 255, 204, 0.1); font-size: 1.2rem; font-family: 'Courier New', Courier, monospace; padding: 0.4rem 1.5rem; outline: none; font-weight: bold;">
-                        <button onclick="exactify()" class="px-3 sm:px-4 py-2 text-xs bg-emerald-950/40 hover:bg-emerald-400 hover:text-black border border-emerald-600 text-emerald-400 font-bold transition-all shrink-0 ml-4 flex items-center justify-center tracking-widest" style="border-radius: 40px; box-shadow: 0 0 8px rgba(0,255,204,0.2); font-family: sans-serif; font-style: italic;">conceptualize!</button>
-                    </div>
-                </div>
-                
-                <div class="flex items-center justify-end flex-1 min-w-[100px] gap-2 sm:gap-4">
-                    <button onclick="addUserOrb()" class="px-3 sm:px-4 py-2 text-xs bg-emerald-950/40 hover:bg-emerald-400 hover:text-black border border-emerald-600 text-emerald-400 font-bold transition-all flex items-center justify-center tracking-widest uppercase" style="border-radius: 40px; box-shadow: 0 0 8px rgba(0,255,204,0.2);">ADD_ORB</button>
-                </div>
-            </div>
-            
-            <div class="reel-container interactzone rounded-t-none bg-black/50">
-                <button class="nav-arrow pointer-events-auto" onclick="scrollReel('topReel', -300)">&#9664;</button>
-                <div id="topReel" class="reel"></div>
-                <button class="nav-arrow pointer-events-auto" onclick="scrollReel('topReel', 300)">&#9654;</button>
+    <div class="ui-layer">
+        <!-- Top Title Bar -->
+        <div class="absolute top-6 left-6 interactzone p-4 flex flex-col gap-1 border-l-4 border-[#ff00ff]">
+            <h1 class="text-2xl font-bold glitch-text uppercase tracking-widest">aTELLEXa v2.0</h1>
+            <p class="text-[10px] opacity-70">SEMANTIC TOPOLOGY & METACOGNITIVE GEMZ</p>
+            <div class="flex gap-4 mt-2">
+                <div class="w-2 h-2 rounded-full bg-[#ff00ff] animate-pulse"></div>
+                <span class="text-[9px] uppercase tracking-tighter text-[#ff00ff]">META_STATE: ACTIVE // GEMZ: RENDERED</span>
             </div>
         </div>
 
-        <div id="DETAILS_PANEL" class="hidden interactzone p-4 shadow-2xl">
-            <div class="flex justify-between items-start mb-3">
-                <h3 id="infoTitle" class="text-emerald-400 font-black uppercase text-sm tracking-widest glow-text"></h3>
-                <button onclick="userCloseInfo()" class="text-emerald-700 hover:text-white text-sm">✕</button>
-            </div>
-            <p id="infoContent" class="text-xs text-emerald-200/80 leading-relaxed font-mono italic mb-4"></p>
-            <div class="grid grid-cols-1 gap-2 text-[10px] border-t border-emerald-900/50 pt-3">
-                <div class="flex justify-between"><span class="text-emerald-700">VECTOR:</span> <span id="infoMetaType" class="text-emerald-400 font-bold"></span></div>
-                <div class="flex justify-between"><span class="text-emerald-700">RELEVANCY:</span> <span id="infoMetaAcc" class="text-emerald-400 font-bold"></span></div>
-                <div class="flex justify-between"><span class="text-emerald-700">SIGNAL:</span> <span id="infoMetaSignal" class="text-emerald-400 font-bold"></span></div>
-                <div class="flex justify-between"><span class="text-emerald-700">EPOCH:</span> <span id="infoMetaTime" class="text-emerald-400 font-bold"></span></div>
-            </div>
-            <button id="setTargetBtn" class="mt-4 w-full border border-emerald-600 bg-emerald-900/20 py-2 text-[10px] text-emerald-400 hover:bg-emerald-400 hover:text-black transition-all uppercase font-black tracking-wider flex items-center justify-center" style="border-radius: 6px;">RECENTER SYSTEM</button>
-            <textarea id="infoDetails" class="mt-3 w-full bg-black/40 border border-emerald-800/50 rounded p-2 text-[10px] text-emerald-300 focus:outline-none focus:border-emerald-500 resize-none" rows="3" placeholder="details..."></textarea>
+        <!-- Top Center Input Bar -->
+        <div class="absolute top-6 left-1/2 transform -translate-x-1/2 interactzone p-2 flex items-center gap-2 w-[500px] max-w-[90vw]">
+            <input type="text" id="prompt-input" placeholder="Inject concept or abstract connection..." 
+                   class="bg-black/50 border border-[#00ffcc]/30 p-2 text-sm w-full outline-none focus:border-[#ff00ff] text-[#00ffcc] pointer-events-auto rounded transition-colors">
+            <button onclick="reflectInput()" class="px-4 py-2 bg-purple-900/50 hover:bg-[#ff00ff] text-[#ff00ff] hover:text-black border border-purple-500 font-bold text-xs transition-all pointer-events-auto rounded tracking-widest">REFLECT</button>
         </div>
 
-        <div id="txtDisplayOverlay" class="absolute bottom-[160px] left-1/2 transform -translate-x-1/2 w-[90%] max-w-4xl text-center pointer-events-none z-20">
-            <p id="txtDisplayContent" class="text-emerald-300 text-sm md:text-base font-mono font-bold leading-relaxed drop-shadow-[0_0_8px_rgba(0,255,204,0.8)] line-clamp-2" style="text-shadow: 1px 1px 3px black;">
-            </p>
+        <!-- Left Legend Panel -->
+        <div id="spectroLegend" class="absolute left-6 top-1/2 transform -translate-y-1/2 z-40 interactzone p-4 shadow-2xl flex flex-col gap-4 w-[300px] max-h-[50vh] overflow-y-auto spectro-scrollbar pointer-events-auto transition-all duration-300">
+            <div class="terminal-header flex justify-between">
+                <span>MANIFOLD_LEGEND (v2)</span>
+            </div>
+            <div id="legend-content" class="flex flex-col gap-2">
+                <!-- Legend items injected by JS -->
+            </div>
         </div>
 
-        <div id="outputPanel" class="hidden interactzone flex flex-col shadow-2xl">
-            <div class="flex justify-between items-center p-3 border-b border-emerald-900/50 bg-black/40 rounded-t-xl shrink-0">
+        <!-- Bottom Collapsible Output Panel -->
+        <div id="outputPanel" class="output-panel hidden-bottom absolute bottom-24 left-1/2 w-[80%] max-w-4xl h-[30vh] interactzone flex flex-col shadow-2xl z-50 pointer-events-auto">
+            <div class="flex justify-between items-center p-3 border-b border-[#00ffcc]/30 bg-black/40 shrink-0">
                 <div class="flex items-center gap-3">
-                    <span class="text-[10px] text-emerald-400 font-black tracking-widest glow-text uppercase">LLM_OUTPUT_STREAM</span>
-                    <span class="text-[9px] text-purple-400 font-mono">PORT: WEBGPU</span>
+                    <span class="text-[10px] text-[#ff00ff] font-black tracking-widest uppercase">METACOGNITIVE_OUTPUT_STREAM</span>
                 </div>
-                <div class="flex items-center gap-2 flex-wrap justify-end">
-                    <button onclick="showAxiomzReadOnly()" class="flex items-center justify-center text-[10px] text-white hover:text-white border border-white/50 bg-gray-900/40 px-3 rounded tracking-widest font-bold transition-colors h-8">📖 AXIOMZ</button>
-                    <button onclick="saveAxiomz()" class="flex items-center justify-center text-[10px] text-yellow-400 hover:text-white border border-yellow-500/50 bg-yellow-950/40 px-3 rounded tracking-widest font-bold transition-colors h-8">💾 SAVE</button>
-                    <button onclick="editAxiomz()" class="flex items-center justify-center text-[10px] text-emerald-400 hover:text-white border border-emerald-500/50 bg-emerald-950/40 px-3 rounded tracking-widest font-bold transition-colors h-8">✏️ EDIT</button>
-                    <button onclick="resetAxiomz()" class="flex items-center justify-center text-[10px] text-blue-400 hover:text-white border border-blue-500/50 bg-blue-950/40 px-3 rounded tracking-widest font-bold transition-colors h-8">🔄 RESET</button>
-                    <button onclick="cancelInference()" class="flex items-center justify-center text-[10px] text-red-500 hover:text-white border border-red-500/50 bg-red-950/40 px-3 rounded tracking-widest font-bold transition-colors h-8">🛑 STOP</button>
-                    <button id="outputSizeBtn" onclick="toggleOutputSize()" class="flex items-center justify-center text-[10px] text-orange-400 hover:text-white border border-orange-500/50 bg-orange-950/40 px-3 rounded tracking-widest font-bold transition-colors h-8">↕ MIN/MAX</button>
-                    <button onclick="document.getElementById('outputPanel').classList.add('hidden')" class="flex items-center justify-center text-emerald-700 hover:text-white font-bold px-2 text-lg h-8">✕</button>
-                </div>
+                <button onclick="toggleOutputPanel()" class="text-[#00ffcc] hover:text-white font-bold px-2">✕</button>
             </div>
-            
-            <div id="outputContent" class="p-4 flex-grow overflow-y-auto text-sm text-emerald-100 font-mono leading-relaxed whitespace-pre-wrap"></div>
-            
-            <div id="editContainer" class="hidden flex-col flex-grow w-full p-4 overflow-hidden">
-                <div class="flex justify-between items-center mb-3 shrink-0">
-                    <select id="editFileSelect" onchange="loadEditorFile(this.value)" class="bg-black/80 border border-emerald-500/50 text-emerald-300 text-[11px] px-3 py-1.5 rounded outline-none font-bold tracking-widest uppercase cursor-pointer">
-                        <option value="AXIOMZ">AXIOMZ</option>
-                        <option value="METATEXT_SYNTAX">METATEXT_SYNTAX</option>
-                        <option value="PRINCIPZ">PRINCIPZ</option>
-                    </select>
-                    <button onclick="closeEditor()" class="text-emerald-600 hover:text-white font-bold text-xl px-2" title="Close Editor">✕</button>
-                </div>
-                <textarea id="axiomzEditArea" class="flex-grow w-full bg-black/60 border border-emerald-500/50 text-emerald-300 font-mono text-base leading-relaxed p-4 rounded focus:outline-none focus:border-emerald-400 transition-colors shadow-[inset_0_0_10px_rgba(0,255,204,0.1)] resize-none overflow-y-auto" spellcheck="false"></textarea>
+            <div id="log-feed" class="p-4 flex-grow overflow-y-auto spectro-scrollbar text-xs text-emerald-100 font-mono leading-relaxed flex flex-col gap-2">
+                <div class="opacity-50">[SYS] Awaiting metacognitive reflections...</div>
             </div>
         </div>
 
-        <div class="flex flex-col pointer-events-auto relative z-20">
-            <div class="flex justify-between items-center px-6 py-1">
-                <div id="llmStatus" class="text-sm font-bold tracking-[0.3em] text-emerald-900 pointer-events-none transition-colors duration-300 whitespace-nowrap overflow-hidden text-ellipsis">LLM UNALIVE</div>
-                <div class="flex items-center gap-2">
-                    <button onclick="document.getElementById('outputPanel').classList.remove('hidden')" class="flex items-center justify-center text-[10px] font-bold tracking-[0.2em] text-cyan-400 hover:text-white border border-cyan-600/50 bg-cyan-900/30 px-3 rounded transition-colors shadow-lg shadow-black/50 pointer-events-auto h-8">📝 LOGZ</button>
-                    <button id="orbitToggleBtn" onclick="toggleOrbits()" class="flex items-center justify-center text-[10px] font-bold tracking-[0.2em] text-emerald-400 hover:text-white border border-emerald-600/50 bg-emerald-900/30 px-3 rounded transition-colors shadow-lg shadow-black/50 pointer-events-auto h-8">⏸ PAUSE</button>
+        <!-- Bottom Status Bar -->
+        <div class="absolute bottom-6 left-6 flex items-end gap-4 pointer-events-none z-40">
+            <div class="interactzone px-4 py-2 flex items-center gap-6 pointer-events-auto rounded-full">
+                <div class="flex flex-col">
+                    <span class="text-[8px] opacity-50 uppercase">Cam Vector</span>
+                    <span id="coord-display" class="text-[10px] font-mono">X: 0.00 Y: 0.00 Z: 0.00</span>
                 </div>
+                <div class="h-6 w-[1px] bg-white/20"></div>
+                <!-- Eye Icon -->
+                <button id="toggle-ui-elements" class="opacity-50 hover:opacity-100 transition-opacity" title="Toggle Legend Controls">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00ffcc" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                </button>
+                <div class="h-6 w-[1px] bg-white/20"></div>
+                <button onclick="toggleOutputPanel()" class="text-[10px] font-bold tracking-widest text-[#ff00ff] hover:text-white">📝 LOGZ</button>
             </div>
             
-            <div class="reel-container interactzone rounded-b-none border-b-0 bg-black/50">
-                <button class="nav-arrow" onclick="scrollReel('bottomReel', -300)">&#9664;</button>
-                <div id="bottomReel" class="reel"></div>
-                <button class="nav-arrow" onclick="scrollReel('bottomReel', 300)">&#9654;</button>
-            </div>
-            <div class="flex justify-around items-center interactzone rounded-t-none p-4 border-t border-emerald-900/50">
-                <div class="flex flex-col items-center pr-6 border-r border-emerald-900/50">
-                    <span class="text-[10px] text-purple-400 font-bold mb-1.5 tracking-widest">THEME_STYLE</span>
-                    <select id="themeSelect">
-                        <option value="ORBITZ" selected>ORBITZ</option>
-                        <option value="TREEZ">TREEZ</option>
-                    </select>
-                </div>
-                <div class="flex flex-col items-center pl-2">
-                    <span class="text-[10px] text-blue-400 font-bold mb-1.5 tracking-widest">X: SIGNAL_POLARITY</span>
-                    <select id="xSelect"><option>ALPHA / NOISE</option></select>
-                </div>
-                <div class="flex flex-col items-center">
-                    <span class="text-[10px] text-emerald-400 font-bold mb-1.5 tracking-widest">Y: RELEVANCY_DEPTH</span>
-                    <select id="ySelect"><option>CORE / THEORY</option></select>
-                </div>
-                <div class="flex flex-col items-center">
-                    <span class="text-[10px] text-cyan-400 font-bold mb-1.5 tracking-widest">Z: CHRONOS_VECTOR</span>
-                    <select id="zSelect"><option>FUTURE / PAST</option></select>
-                </div>
-            </div>
+            <!-- Toggleable Legend Button -->
+            <button id="legend-toggle-btn" class="interactzone px-4 py-2 text-[10px] font-bold tracking-widest border-t-2 border-[#ff00ff] pointer-events-auto opacity-0 translate-y-4 transition-all duration-300 rounded-lg">
+                LEGEND
+            </button>
+        </div>
+        
+        <!-- Center Bottom Identity -->
+        <div class="absolute bottom-6 right-6 opacity-40 text-[9px] tracking-[0.4em] pointer-events-none uppercase border-b border-[#00ffcc]/30 pb-1">
+            TO aSEEKa, aSPARKa IN aDARKa
         </div>
     </div>
 
     <script>
-        let scene, camera, renderer, raycaster, mouse, controls;
-        let orbz = [];
-        let netzLines = [];
-        let interactableCones = [];
-        let currentDomain = "FINANCIAL";
-        let currentTarget = "FINANCIAL";
-        let hoveredObj = null;
-        let selectedObj = null;
-
-        let isSwooping = false;
-        let swoopTargetPos = new THREE.Vector3();
-        let currentViewId = 'HOME';
-        
-        let sharedGlowMaterial;
-        let sharedSelectedGlowMaterial;
-
-        let isInferencing = false;
-        let isPaused = false;
-        let hasInitializedThreeJS = false; 
-        let isFirstQuery = true;
-        let isOutputMaximized = false;
-        
-        let loadingTimerInterval = null;
-        let loadingStartTime = 0;
-
-        let currentGalleryIndex = 0;
-        const galleryKeys = ['HERE_BITZ', 'MIDDLE_BITZ', 'THERE_BITZ'];
-
-        // --- NEW ARCHITECTURE: DEFAULT STATE & SYNTAX ---
-        const DEFAULT_METATEXT_SYNTAX = `Rules of ALPHATEXTA:
-1. .| and |. indicate DIMZ (Dimensions).
-2. Pipes | separate concept cells.
-3. Terminators are optional; the conceptual fabric is fluid.
-4. Concept Pockets () peek into sub-dimensions without breaking the root node.
-5. Spaces allow integration of English phrasing between pipes.`;
-
-        const DEFAULT_METASTATE = [
-            { id: "AXIOM_0", text: ".| aSPARKa | the moment of awareness |.", vector: "GENESIS" },
-            { id: "AXIOM_1", text: ".| CONTEXT_SHIFT |~>| CONCEPT_SHIFT |.", vector: "DYNAMICS" },
-            { id: "AXIOM_2", text: ".| we can just type a concept into metatext, however we want |&| there is very little RESTRICTION! |.", vector: "FREEDOM" },
-            { id: "AXIOM_3", text: ".| AXIOM_COLLECTOR | provides biologic extra_ability | to fetch concepts from obscure views |.", vector: "MEMORY" }
-        ];
-
-        let EXTERNAL_AXIOMZ_MD = "";
-        let EXTERNAL_METATEXT_MD = "";
-
-        const DATA_MAP = {
-            "FINANCIAL": {
-                nodes: [
-                    { label: "FINANCIAL", x: 0, y: 0, z: 0, size: 2.2, color: 0x00ffcc, type: 'ai', content: "Primary market intelligence node.", signal: "STABLE", texMode: 'metallic' },
-                    { label: "CPI_RELEASE", x: 10, y: 8, z: 4, size: 1.4, color: 0x00fff2, type: 'ai', content: "Upcoming inflationary data point.", signal: "HIGH_VOL", texMode: 'wireframe' },
-                    { label: "QUARTERLY", x: 5, y: 5, z: 12, size: 1.2, color: 0x00ff00, type: 'ai', content: "Recurring fiscal reporting vector.", signal: "BULL", texMode: 'planetoid' },
-                    { label: "SILICON_VALLEY", x: -5, y: 3, z: 8, size: 1.6, color: 0xffccff, type: 'ai', content: "Central tech capital flow.", signal: "STABLE", texMode: 'foggy' },
-                    { label: "ETF_SPOT", x: 8, y: 10, z: 10, size: 1.5, color: 0xffaa00, type: 'ai', content: "Institutional liquidity bridge.", signal: "BULL", texMode: 'cluster_core' },
-                    { label: "YIELD_CURVE", x: -10, y: 6, z: -5, size: 1.5, color: 0xff00ff, type: 'ai', content: "Treasury rate inversion tracking.", signal: "WARNING", texMode: 'foggy' },
-                    { label: "BLACK_SWAN", x: -12, y: -10, z: -8, size: 1.8, color: 0xff0033, type: 'ai', content: "Outlier event cached in historical theory.", signal: "CHAOS", texMode: 'planetoid' },
-                    { label: "GENESIS_NODE", x: -8, y: -12, z: -15, size: 2.0, color: 0x00ffcc, type: 'ai', content: "The origin of decentralized ledger flow.", signal: "STABLE", texMode: 'cluster_core' },
-                    { label: "DARK_POOLS", x: 10, y: -8, z: 5, size: 1.4, color: 0x8800ff, type: 'ai', content: "Off-exchange trading volume index.", signal: "HIDDEN", texMode: 'hollow_core' },
-                    { label: "QUANT_EASING", x: 2, y: -6, z: -10, size: 1.7, color: 0x00ff88, type: 'ai', content: "Central bank monetary supply vector.", signal: "STABLE", texMode: 'wireframe' },
-                    { label: "DERIVATIVES", x: -14, y: 4, z: 10, size: 1.5, color: 0x00ff88, type: 'ai', content: "Options and futures hedging networks.", signal: "HIGH_VOL", texMode: 'cluster_core' },
-                    { label: "LIQUIDITY_GAP", x: 14, y: -4, z: -10, size: 1.6, color: 0xff0044, type: 'ai', content: "Order book fragmentation node.", signal: "WARNING", texMode: 'cluster_core' }
-                ],
-                top_reel: [
-                    { label: "FED_CTX", type: "metatext", content: "const tokens = ['hawkish', 'hold', 'inflation'];" },
-                    { label: "RAW_JSON", type: "metatext", content: "{\n \"BTC_USD\": 64200,\n \"ETH_USD\": 3450\n}" },
-                    { label: "WHALE_BOT", type: "wordz", content: "50K BTC MOVED" },
-                    { label: "SEC_LOG", type: "metatext", content: "[SYS] Form 13F injected. Institutional buy wall up 14%." },
-                    { label: "BETA_VAR", type: "wordz", content: "σ² = 0.045\nβ = 1.2" },
-                    { label: "SENTIMENT", type: "wordz", content: "FEAR/GREED: 78" }
-                ],
-                bottom_reel: [
-                    { label: "MACD_CHART", type: "image", bg: "linear-gradient(45deg, #001111, #004433, #00ffcc)" },
-                    { label: "ORDER_BK", type: "wordz", content: "ASK: 64,250\nBID: 64,190" },
-                    { label: "HEATMAP", type: "image", bg: "radial-gradient(circle at center, #ff0044 0%, #220000 80%)" },
-                    { label: "FLOW_DATA", type: "wordz", content: "10M USDT\n-->\nBINANCE" },
-                    { label: "VOL_SURFACE", type: "image", bg: "conic-gradient(from 180deg at 50% 50%, #00ffcc 0deg, #ff0044 180deg, #00ffcc 360deg)" },
-                    { label: "LIQ_ZONE", type: "image", bg: "repeating-linear-gradient(45deg, rgba(0,255,204,0.1) 0px, rgba(0,255,204,0.1) 5px, transparent 5px, transparent 10px)" }
-                ]
+        // --- SHADER DEFINITIONS (Original Nebula Core) ---
+        const NebulaShader = {
+            uniforms: {
+                time: { value: 0.0 },
+                baseColor: { value: new THREE.Color(0x00ccff) },
+                nebulaColor: { value: new THREE.Color(0xaa00ff) }
             },
-            "MEDICAL": {
-                nodes: [
-                    { label: "MEDICAL", x: 0, y: 0, z: 0, size: 2.2, color: 0x00ffcc, type: 'ai', content: "Primary healthcare intelligence node.", signal: "STABLE", texMode: 'hollow_core' },
-                    { label: "CODE_BLUE", x: 8, y: 12, z: 0, size: 1.8, color: 0x00fff2, type: 'ai', content: "Cardiac emergency protocol active.", signal: "URGENT", texMode: 'planetoid' },
-                    { label: "TRIAGE", x: -6, y: 4, z: 8, size: 1.4, color: 0x00ff00, type: 'ai', content: "Patient sorting vector.", signal: "STANDARD", texMode: 'glass' },
-                    { label: "CRISPR_CAS9", x: 10, y: 7, z: 5, size: 1.7, color: 0xff00ff, type: 'ai', content: "Gene editing sequence protocols.", signal: "INNOVATION", texMode: 'cluster_core' },
-                    { label: "NEURO_LINK", x: -5, y: 9, z: -4, size: 1.5, color: 0x00ccff, type: 'ai', content: "Brain-computer interface telemetry.", signal: "BETA", texMode: 'metallic' },
-                    { label: "SYMPTOMS", x: 5, y: -8, z: -6, size: 1.6, color: 0xffaa00, type: 'ai', content: "Reported patient distress data.", signal: "VARIABLE", texMode: 'wireframe' },
-                    { label: "HISTORY", x: -8, y: -10, z: -12, size: 1.5, color: 0x888888, type: 'ai', content: "Past medical history records.", signal: "STATIC", texMode: 'cluster_core' },
-                    { label: "MRNA_VECTOR", x: 12, y: -5, z: 8, size: 1.4, color: 0xff0044, type: 'ai', content: "Vaccine payload delivery tracking.", signal: "STABLE", texMode: 'hollow_core' },
-                    { label: "ONCOLOGY", x: -10, y: -7, z: 4, size: 1.9, color: 0xff3300, type: 'ai', content: "Cellular mutation regression rates.", signal: "CRITICAL", texMode: 'planetoid' },
-                    { label: "TELE_HEALTH", x: 3, y: -9, z: -10, size: 1.3, color: 0x00ffcc, type: 'ai', content: "Remote diagnostic bandwidth.", signal: "GROWTH", texMode: 'glass' },
-                    { label: "PATHOLOGY", x: 14, y: 2, z: -8, size: 1.6, color: 0x8800ff, type: 'ai', content: "Disease tissue classification vectors.", signal: "STABLE", texMode: 'cluster_core' },
-                    { label: "NEURO_PLASTICITY", x: -12, y: -5, z: 10, size: 1.5, color: 0x00ffcc, type: 'ai', content: "Synaptic regeneration mapping.", signal: "GROWTH", texMode: 'cluster_core' }
-                ],
-                top_reel: [
-                    { label: "PATIENT_CTX", type: "metatext", content: "{\"age\": 45, \"bp\": \"120/80\", \"temp\": 98.6}" },
-                    { label: "VITALS", type: "wordz", content: "HR: 85 BPM" }
-                ],
-                bottom_reel: [
-                    { label: "XRAY_IMG", type: "image", bg: "radial-gradient(circle, #555, #000)" }
-                ]
-            }
+            vertexShader: `
+                varying vec2 vUv;
+                varying vec3 vPosition;
+                varying vec3 vNormal;
+                void main() {
+                    vUv = uv;
+                    vPosition = position;
+                    vNormal = normalize(normalMatrix * normal);
+                    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+                }
+            `,
+            fragmentShader: `
+                uniform float time;
+                uniform vec3 baseColor;
+                uniform vec3 nebulaColor;
+                varying vec2 vUv;
+                varying vec3 vPosition;
+                varying vec3 vNormal;
+
+                vec3 mod289(vec3 x){return x - floor(x * (1.0 / 289.0)) * 289.0;}
+                vec4 mod289(vec4 x){return x - floor(x * (1.0 / 289.0)) * 289.0;}
+                vec4 permute(vec4 x){return mod289(((x*34.0)+1.0)*x);}
+                vec4 taylorInvSqrt(vec4 r){return 1.79284291400159 - 0.85373472095314 * r;}
+
+                float snoise(vec3 v) {
+                    const vec2  C = vec2(1.0/6.0, 1.0/3.0) ;
+                    const vec4  D = vec4(0.0, 0.5, 1.0, 2.0);
+                    vec3 i  = floor(v + dot(v, C.yyy) );
+                    vec3 x0 = v - i + dot(i, C.xxx) ;
+                    vec3 g = step(x0.yzx, x0.xyz);
+                    vec3 l = 1.0 - g;
+                    vec3 i1 = min( g.xyz, l.zxy );
+                    vec3 i2 = max( g.xyz, l.zxy );
+                    vec3 x1 = x0 - i1 + C.xxx;
+                    vec3 x2 = x0 - i2 + C.yyy;
+                    vec3 x3 = x0 - D.yyy;
+                    i = mod289(i);
+                    vec4 p = permute( permute( permute(
+                                i.z + vec4(0.0, i1.z, i2.z, 1.0 ))
+                            + i.y + vec4(0.0, i1.y, i2.y, 1.0 ))
+                            + i.x + vec4(0.0, i1.x, i2.x, 1.0 ));
+                    float n_ = 0.142857142857;
+                    vec3  ns = n_ * D.wyz - p.xzw;
+                    vec4 j = p - 49.0 * floor(p * ns.z * ns.z);
+                    vec4 x_ = floor(j * ns.z);
+                    vec4 y_ = floor(j - 7.0 * x_ );
+                    vec4 x = x_ *ns.x + ns.yyyy;
+                    vec4 y = y_ *ns.x + ns.yyyy;
+                    vec4 h = 1.0 - abs(x) - abs(y);
+                    vec4 b0 = vec4( x.xy, y.xy );
+                    vec4 b1 = vec4( x.zw, y.zw );
+                    vec4 s0 = floor(b0)*2.0 + 1.0;
+                    vec4 s1 = floor(b1)*2.0 + 1.0;
+                    vec4 sh = -step(h, vec4(0.0));
+                    vec4 a0 = b0.xzyw + s0.xzyw*sh.xxyy ;
+                    vec4 a1 = b1.xzyw + s1.xzyw*sh.zzww ;
+                    vec3 p0 = vec3(a0.xy,h.x);
+                    vec3 p1 = vec3(a0.zw,h.y);
+                    vec3 p2 = vec3(a1.xy,h.z);
+                    vec3 p3 = vec3(a1.zw,h.w);
+                    vec4 norm = taylorInvSqrt(vec4(dot(p0,p0), dot(p1,p1), dot(p2, p2), dot(p3,p3)));
+                    p0 *= norm.x; p1 *= norm.y; p2 *= norm.z; p3 *= norm.w;
+                    vec4 m = max(0.6 - vec4(dot(x0,x0), dot(x1,x1), dot(x2,x2), dot(x3,x3)), 0.0);
+                    m = m * m;
+                    return 42.0 * dot( m*m, vec4( dot(p0,x0), dot(p1,x1), dot(p2,x2), dot(p3,x3) ) );
+                }
+
+                float fbm(vec3 p) {
+                    float v = 0.0; float a = 0.5; vec3 shift = vec3(100.0);
+                    for (int i = 0; i < 4; i++) { v += a * snoise(p); p = p * 2.0 + shift; a *= 0.5; }
+                    return v;
+                }
+
+                void main() {
+                    float fresnel = pow(1.0 - dot(vNormal, vec3(0.0, 0.0, 1.0)), 3.0);
+                    vec3 noisePos = vPosition * 2.5 + vec3(0.0, 0.0, time * 0.2);
+                    float n = fbm(noisePos);
+                    float cloud = smoothstep(-0.2, 0.6, n);
+                    vec3 color = mix(baseColor, nebulaColor, n * 0.5 + 0.5);
+                    float alpha = cloud * (1.0 - fresnel);
+                    gl_FragColor = vec4(color, alpha * 0.8);
+                }
+            `
         };
 
-        function setOverlayText(text) {
-            const overlay = document.getElementById('txtDisplayContent');
-            if (overlay) overlay.innerText = text;
-        }
+        // --- APP LOGIC & GALLERY DATA ---
+        let scene, camera, renderer, controls;
+        let orbGroup = [];
+        let sharedGlowTex;
 
-        function createTextCanvas(text, isCenter) {
+        // The expanded Data Set including GEMZ, SPARK_NEBULA, GLASS_NUCLEUS, WIRED_CORE
+        const GALLERY_DATA = [
+            // Core Legacy Nodes
+            { label: 'NEBULA_CORE', type: 'NEBULA', color: 0xaa00ff, color2: 0x00ffff, size: 12, x: 0, y: 0, z: 0, desc: 'Fluid macro-event genesis state.' },
+            
+            // New Shader Concepts
+            { label: 'SPARK_NEBULA', type: 'SPARK_NEBULA', color: 0x00ffff, color2: 0xff00ff, size: 14, x: -35, y: 15, z: -25, desc: 'Highly charged probabilistic point-cloud.' },
+            { label: 'GLASS_NUCLEUS', type: 'GLASS_NUCLEUS', color: 0x00ffcc, color2: 0xff00aa, size: 10, x: 30, y: 20, z: 15, desc: 'Transparent standard flow with solid sub-states.' },
+            { label: 'WIRED_CORE', type: 'WIRED_CORE', color: 0xffaa00, color2: 0xff0055, size: 9, x: -25, y: -20, z: 25, desc: 'Dense core bounded by rigid wireframe structure.' },
+            
+            // The "GEMZ" (Metacognitive Wireframe States)
+            { label: 'TETRAD_GEM', type: 'META_ALPHA', color: 0xff0055, size: 7, x: 20, y: -15, z: -30, desc: 'Tetrahedron. Foundational base connection point.' },
+            { label: 'OCTA_GEM', type: 'META_BETA', color: 0x88ff00, size: 8, x: 40, y: 5, z: -10, desc: 'Octahedron. Dual-pole conceptual state geometry.' },
+            { label: 'ICOSA_GEM', type: 'META_GAMMA', color: 0x00ffcc, size: 10, x: -10, y: 35, z: 15, desc: 'Icosahedron. Complex, multi-faceted truth lattice.' },
+            { label: 'DODECA_GEM', type: 'META_DELTA', color: 0xff00ff, size: 9, x: 15, y: -5, z: 40, desc: 'Dodecahedron. Complete metacognitive boundary node.' }
+        ];
+
+        function createGlowTexture() {
             const canvas = document.createElement('canvas');
-            canvas.width = 512; 
-            canvas.height = 256;
+            canvas.width = 128; canvas.height = 128;
             const ctx = canvas.getContext('2d');
-            
-            if (isCenter) {
-                ctx.fillStyle = 'rgba(255, 170, 0, 1)'; 
-                ctx.font = 'bold 48px Courier New';
-            } else {
-                ctx.fillStyle = 'rgba(255, 255, 255, 0.9)'; 
-                ctx.font = 'bold 32px Courier New'; 
-            }
-            
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            
-            // Format for English spaces: replace underscores and separate CamelCase
-            let formattedText = text.replace(/_/g, ' ').replace(/([a-z])([A-Z])/g, '$1 $2');
-            
-            // Wrap words by spaces and canvas width
-            const words = formattedText.split(' ');
-            let lines = [];
-            let currentLine = "";
-            
-            words.forEach(word => {
-                let testLine = currentLine + word + " ";
-                let metrics = ctx.measureText(testLine);
-                if (metrics.width > 480 && currentLine.length > 0) {
-                    lines.push(currentLine.trim());
-                    currentLine = word + " ";
-                } else {
-                    currentLine = testLine;
-                }
-            });
-            lines.push(currentLine.trim());
-            
-            const lineHeight = isCenter ? 54 : 38;
-            const startY = (256 - (lines.length * lineHeight)) / 2 + (lineHeight / 2);
-            
-            lines.forEach((line, i) => {
-                ctx.fillText(line, 256, startY + (i * lineHeight));
-            });
-            
+            const grad = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
+            grad.addColorStop(0, 'rgba(255,255,255,1)');
+            grad.addColorStop(0.1, 'rgba(255,255,255,0.8)');
+            grad.addColorStop(0.4, 'rgba(255,255,255,0.2)');
+            grad.addColorStop(1, 'rgba(255,255,255,0)');
+            ctx.fillStyle = grad; ctx.fillRect(0, 0, 128, 128);
             return new THREE.CanvasTexture(canvas);
         }
 
-        function updateOrbLabel(orb, text) {
-            orb.userData.label = text;
-            if (orb.userData.spriteRef && orb.userData.spriteRef.material) {
-                if (orb.userData.spriteRef.material.map) {
-                    orb.userData.spriteRef.material.map.dispose();
-                }
-                orb.userData.spriteRef.material.map = createTextCanvas(text, orb.userData.isCenter);
-                orb.userData.spriteRef.material.needsUpdate = true;
-            }
+        function createLabel(text, size, isGem) {
+            const canvas = document.createElement('canvas');
+            canvas.width = 512; canvas.height = 128;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = isGem ? 'rgba(255, 0, 255, 0.9)' : 'rgba(0, 255, 204, 0.9)'; 
+            ctx.font = 'bold 36px Courier New'; 
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillText(text, 256, 64);
+            const tex = new THREE.CanvasTexture(canvas);
+            const spriteMat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false });
+            const sprite = new THREE.Sprite(spriteMat);
+            sprite.scale.set(size * 3, size * 0.75, 1);
+            sprite.position.y = -size - 3;
+            return sprite;
         }
 
-        function applyWordsToOrbs(wordsArray, centerTopic) {
-            const centerOrb = orbz.find(o => o.userData.isCenter);
-            if (centerOrb && centerTopic) {
-                updateOrbLabel(centerOrb, centerTopic);
-                currentTarget = centerTopic; 
-            }
+        function createGem(geometry, color, size) {
+            const group = new THREE.Group();
             
-            const outerOrbz = orbz.filter(o => !o.userData.isCenter);
-            for (let i = 0; i < outerOrbz.length; i++) {
-                const word = wordsArray[i % wordsArray.length] || `EMPTY_${i}`;
-                updateOrbLabel(outerOrbz[i], word);
-            }
-            setOverlayText(`[ ORBZ POPULATED: ${wordsArray.length} BITZ ]`);
+            // The Wireframe Lines
+            const edges = new THREE.WireframeGeometry(geometry);
+            const lineMat = new THREE.LineBasicMaterial({ color: color, transparent: true, opacity: 0.8 });
+            const lines = new THREE.LineSegments(edges, lineMat);
+            group.add(lines);
+
+            // Glowing Points at Vertices
+            const pointMat = new THREE.PointsMaterial({
+                color: color, size: size * 0.25, map: sharedGlowTex, 
+                transparent: true, blending: THREE.AdditiveBlending, depthWrite: false
+            });
+            const points = new THREE.Points(geometry, pointMat);
+            group.add(points);
+
+            return group;
         }
 
-        function applyGalleryToOrbs(storageKey, centerTopic) {
-            const dataStr = localStorage.getItem(storageKey);
-            if (!dataStr) return;
-            try {
-                const words = JSON.parse(dataStr);
-                applyWordsToOrbs(words, centerTopic);
-                setOverlayText(`[ GALLERY LOADED: ${storageKey} ]`);
-            } catch(e) { console.error("Failed to parse gallery localstorage", e); }
-        }
-
-        function enableDetails() {
-            document.getElementById('toggleDetailsBtn').classList.add('hidden');
-            if (selectedObj) {
-                document.getElementById('DETAILS_PANEL').classList.remove('hidden');
-            } else {
-                const centerOrb = orbz.find(o => o.userData.isCenter);
-                if (centerOrb) showInfo(centerOrb.userData);
-                else document.getElementById('DETAILS_PANEL').classList.remove('hidden');
-            }
-        }
-
-        function enableLEGEND() {
-            document.getElementById('toggleLEGENDBtn').classList.add('hidden');
-            if (selectedObj) {
-                document.getElementById('LEGEND_PANEL').classList.remove('hidden');
-            } else {
-                document.getElementById('LEGEND_PANEL').classList.remove('hidden');
-            }
-        }
-
-        function userCloseInfo() {
-            closeInfo();
-        }
-
-        function userCloseLEGEND() {
-            document.getElementById('LEGEND_PANEL').classList.add('hidden'); 
-            document.getElementById('toggleLEGENDBtn').classList.remove('hidden');
-        }
-
-        function parseAndApplyMetaText(text, mode, topic, runBlock) {
-            let displayTokens = {};
-            let metaTextEncodedStr = "";
-            
-            const cleanText = text.replace(/[*"']/g, ''); 
-            
-            let rawTokens = cleanText.split(/[\n,\|]+/) 
-                .map(t => t.replace(/^[0-9]+[\.\-\)]?\s*/g, '').trim()) 
-                .filter(t => t.length > 1 && t.toUpperCase() !== topic.toUpperCase());
-
-            if (rawTokens.length <= 3) {
-                rawTokens = cleanText.split(/[\s\n,\|]+/)
-                    .map(t => t.replace(/^[0-9]+[\.\-\)]?\s*/g, '').trim())
-                    .filter(t => t.length > 1 && t.toUpperCase() !== topic.toUpperCase());
-            }
-
-            rawTokens = rawTokens.filter(t => !["HERE", "MIDDLE", "THERE", "SUBZ", "CONCEPTS", "CORE", "ADVANCED", "SPECULATIVE"].includes(t.toUpperCase()));
-
-            if (mode === "LATERALIZE") {
-                while (rawTokens.length < 30) rawTokens.push(`NUL_${rawTokens.length}`); 
-
-                const here = rawTokens.slice(0, 10);
-                const middle = rawTokens.slice(10, 20);
-                const there = rawTokens.slice(20, 30);
-
-                localStorage.setItem('HERE_BITZ', JSON.stringify(here));
-                localStorage.setItem('MIDDLE_BITZ', JSON.stringify(middle));
-                localStorage.setItem('THERE_BITZ', JSON.stringify(there));
-                
-                currentGalleryIndex = 0;
-                applyGalleryToOrbs('HERE_BITZ', topic);
-                displayTokens = { HERE: here, MIDDLE: middle, THERE: there };
-                
-                metaTextEncodedStr = `.| ${topic} | HERE | ` + here.join(" | ") + ` | MIDDLE | ` + middle.join(" | ") + ` | THERE | ` + there.join(" | ") + ` |.`;
-
-            } else { 
-                while (rawTokens.length < 10) rawTokens.push(`NUL_${rawTokens.length}`); 
-                const finalTokens = rawTokens.slice(0, 10);
-                const internalLabel = mode === "AXIOMZ" ? "AXIOMZ" : "subz";
-                
-                metaTextEncodedStr = `.| ${topic} | ${internalLabel} | ` + finalTokens.join(" | ") + ` |.`;
-                
-                applyWordsToOrbs(finalTokens, topic);
-                displayTokens = { [internalLabel.toUpperCase()]: finalTokens };
-            }
-
-            if (runBlock) {
-                const parsedAlert = document.createElement('div');
-                parsedAlert.className = "text-purple-400 font-mono mt-3 text-[11px] border-t border-purple-900/50 pt-2 bg-black/40 p-2 rounded";
-                
-                let htmlStr = `> [SYS] NATIVE OUTPUT TRANSLATED TO METATEXT & INJECTED:<br>`;
-                for (const [key, arr] of Object.entries(displayTokens)) {
-                    htmlStr += `<span class="text-emerald-400">${key}:</span> [ ${arr.join(', ')} ]<br>`;
-                }
-                
-                htmlStr += `<br><span class="text-yellow-400">> [ENCODED METATEXT]:</span><br><span class="text-cyan-300 break-all">${metaTextEncodedStr}</span>`;
-                
-                parsedAlert.innerHTML = htmlStr;
-                runBlock.appendChild(parsedAlert);
-            }
-        }
-
-        // BTN LOGGER
-        function logAction(msg, colorClass="text-purple-400") {
-            const outputContent = document.getElementById('outputContent');
-            if(!outputContent) return;
-            const logEntry = document.createElement('div');
-            logEntry.className = `mb-2 pb-2 border-b border-gray-800/30 font-mono text-[9px] ${colorClass}`;
-            logEntry.innerHTML = `> [BTN_EVENT] ${msg}`;
-            outputContent.appendChild(logEntry);
-            outputContent.scrollTop = outputContent.scrollHeight;
-        }
-
-        function toggleOutputSize() {
-            logAction("MIN/MAX panel toggled.", "text-orange-400");
-            isOutputMaximized = !isOutputMaximized;
-            const panel = document.getElementById('outputPanel');
-            const btn = document.getElementById('outputSizeBtn');
-            if (isOutputMaximized) {
-                panel.style.height = '80vh';
-                btn.innerText = '↕ MIN';
-            } else {
-                panel.style.height = '33vh';
-                btn.innerText = '↕ MAX';
-            }
-        }
-
-        function resetAxiomz() {
-            document.getElementById('outputPanel').classList.remove('hidden');
-            logAction("RESET clicked. Restoring AXIOMZ from ./models/AXIOMZ.md", "text-blue-400");
-            
-            const defaultStr = EXTERNAL_AXIOMZ_MD || ".| aSPARKa | the moment of awareness |.";
-            localStorage.setItem('AXIOM_COLLECTOR', defaultStr);
-            setOverlayText("[ AXIOMZ RESET TO DEFAULTS ]");
-            
-            const outputContent = document.getElementById('outputContent');
-            if(outputContent) {
-                const runBlock = document.createElement('div');
-                runBlock.className = "mb-6 pb-4 border-b border-blue-900/30";
-                runBlock.innerHTML = `<span class="text-blue-500 font-bold font-mono text-xs">> [SYS] AXIOM_COLLECTOR CLEARED FROM LOCAL STORAGE.<br>> SYSTEM REVERTED TO HARDCODED DEFAULTS.</span>`;
-                outputContent.appendChild(runBlock);
-                outputContent.scrollTop = outputContent.scrollHeight;
-            }
-        }
-
-        function showAxiomzReadOnly() {
-            document.getElementById('outputPanel').classList.remove('hidden');
-            logAction("AXIOMZ clicked. Displaying read-only state.", "text-white");
-            
-            const outputContent = document.getElementById('outputContent');
-            let localAxiomsStr = localStorage.getItem('AXIOM_COLLECTOR') || '';
-            
-            const runBlock = document.createElement('div');
-            runBlock.className = "mb-6 pb-4 border-b border-white/30";
-            runBlock.innerHTML = `<span class="text-white font-bold font-mono text-xs tracking-widest uppercase">> [SYS] CURRENT AXIOM_COLLECTOR STATE:</span><br>
-            <pre class="text-gray-300 font-mono text-[10px] mt-2 bg-black/50 p-2 rounded border border-gray-700/50 whitespace-pre-wrap">${localAxiomsStr}</pre>`;
-            
-            outputContent.appendChild(runBlock);
-            outputContent.scrollTop = outputContent.scrollHeight;
-        }
-
-        function editAxiomz() {
-            document.getElementById('outputPanel').classList.remove('hidden');
-            document.getElementById('outputContent').classList.add('hidden');
-            
-            const editContainer = document.getElementById('editContainer');
-            editContainer.classList.remove('hidden');
-            editContainer.classList.add('flex');
-            
-            logAction("EDIT clicked. Initializing full-page text editor.", "text-emerald-400");
-            loadEditorFile(document.getElementById('editFileSelect').value);
-        }
-        
-        function closeEditor() {
-            const editContainer = document.getElementById('editContainer');
-            editContainer.classList.add('hidden');
-            editContainer.classList.remove('flex');
-            document.getElementById('outputContent').classList.remove('hidden');
-            logAction("Closed editor view.", "text-gray-400");
-        }
-        
-        function loadEditorFile(fileKey) {
-            let content = "";
-            if (fileKey === "AXIOMZ") {
-                content = localStorage.getItem('AXIOM_COLLECTOR') || (EXTERNAL_AXIOMZ_MD || ".| aSPARKa | the moment of awareness |.");
-            } else if (fileKey === "METATEXT_SYNTAX") {
-                content = localStorage.getItem('METATEXT_SYNTAX') || (EXTERNAL_METATEXT_MD || DEFAULT_METATEXT_SYNTAX);
-            } else if (fileKey === "PRINCIPZ") {
-                content = localStorage.getItem('PRINCIPZ') || ".| PRINCIPZ | fluidity over rigidity |.";
-            }
-            
-            const editArea = document.getElementById('axiomzEditArea');
-            editArea.value = content;
-            editArea.disabled = false;
-            editArea.classList.remove('opacity-50');
-            logAction(`Loaded [${fileKey}] into editor workspace.`, "text-cyan-400");
-        }
-
-        function saveAxiomz() {
-            document.getElementById('outputPanel').classList.remove('hidden');
-            
-            const editContainer = document.getElementById('editContainer');
-            if (editContainer.classList.contains('hidden')) {
-                logAction("ERROR: NO ACTIVE EDIT SESSION FOUND. CLICK [EDIT] FIRST.", "text-red-500");
-                return;
-            }
-
-            const editArea = document.getElementById('axiomzEditArea');
-            const fileKey = document.getElementById('editFileSelect').value;
-            const newContent = editArea.value;
-
-            try {
-                if (fileKey === "AXIOMZ") {
-                    localStorage.setItem('AXIOM_COLLECTOR', newContent);
-                } else if (fileKey === "METATEXT_SYNTAX") {
-                    localStorage.setItem('METATEXT_SYNTAX', newContent);
-                } else if (fileKey === "PRINCIPZ") {
-                    localStorage.setItem('PRINCIPZ', newContent);
-                }
-                
-                logAction(`SAVE clicked. Persisted [${fileKey}] state to local storage.`, "text-yellow-400");
-                
-                // Add a visual flash to confirm saving to user
-                editArea.classList.add('border-yellow-400');
-                setTimeout(() => editArea.classList.remove('border-yellow-400'), 400);
-                
-            } catch (err) {
-                logAction(`ERROR FAILED TO SAVE: ${err.message}`, "text-red-500");
-            }
-        }
-
-        function toggleLoading(show, message = "LOADING...") {
-            const overlay = document.getElementById('loadingOverlay');
-            const timerEl = document.getElementById('loadingTimer');
-            
-            if (show) {
-                overlay.style.display = 'flex';
-                document.getElementById('loadingOverlayText').innerText = message;
-                loadingStartTime = Date.now();
-                if(loadingTimerInterval) clearInterval(loadingTimerInterval);
-                loadingTimerInterval = setInterval(() => {
-                    const elapsed = ((Date.now() - loadingStartTime) / 1000).toFixed(1);
-                    timerEl.innerHTML = `${elapsed}s<br><span class="text-xs text-emerald-700 mt-2 block">Loading Brains: 1st init takes the longest!</span>`;
-                }, 100);
-            } else {
-                overlay.style.display = 'none';
-                if(loadingTimerInterval) { clearInterval(loadingTimerInterval); loadingTimerInterval = null; }
-            }
-        }
-        
-        function forceCloseLoading() {
-            toggleLoading(false);
-            if (!hasInitializedThreeJS) initThreeJS();
-        }
-
-        function toggleOrbits() {
-            isPaused = !isPaused;
-            const btn = document.getElementById('orbitToggleBtn');
-            btn.innerText = isPaused ? "▶ PLAY" : "⏸ PAUSE";
-            btn.className = isPaused 
-                ? "flex items-center justify-center text-[10px] font-bold tracking-[0.2em] text-yellow-400 hover:text-white border border-yellow-600/50 bg-yellow-900/30 px-3 rounded transition-colors shadow-lg shadow-black/50 pointer-events-auto h-8"
-                : "flex items-center justify-center text-[10px] font-bold tracking-[0.2em] text-emerald-400 hover:text-white border border-emerald-600/50 bg-emerald-900/30 px-3 rounded transition-colors shadow-lg shadow-black/50 pointer-events-auto h-8";
-            setOverlayText(isPaused ? "[ SYSTEM FROZEN ]" : "[ ORBITAL DYNAMICS ACTIVE ]");
-        }
-
-        async function initApp() {
-            toggleLoading(true, "loading LLM...");
-            
-            try {
-                const { LlmInference, FilesetResolver } = await import('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-genai');
-                const genaiWasm = await FilesetResolver.forGenAiTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-genai/wasm");
-                
-                window.LLM_INFERENCE = await LlmInference.createFromOptions(genaiWasm, {
-                    baseOptions: { modelAssetPath: "./models/gemma-4-E2B-it-web.task" },
-                    maxTokens: 2048, topK: 40, temperature: 0.1 
-                });
-                
-                console.log("Gemma 4 E2B LiteRT Engine initialized successfully.");
-                
-                const statusEl = document.getElementById('llmStatus');
-                statusEl.innerText = "Gemma 4 - LLM ALIVE";
-                statusEl.className = "px-6 py-1 text-sm font-bold tracking-[0.3em] text-emerald-400 pointer-events-none transition-colors duration-300 drop-shadow-[0_0_8px_rgba(0,255,204,0.8)] whitespace-nowrap overflow-hidden text-ellipsis";
-                setOverlayText("[ ENGINE READY ]");
-
-                // Initialize State Bridge
-                await initializeStateBridge();
-
-                toggleLoading(false);
-                if (!hasInitializedThreeJS) initThreeJS();
-
-            } catch (error) {
-                console.error("LiteRT LLM Initialization Failed:", error);
-                const statusEl = document.getElementById('llmStatus');
-                statusEl.innerText = `LLM UNALIVE - ${error.message}`;
-                statusEl.className = "px-6 py-1 text-sm font-bold tracking-[0.3em] text-red-500 pointer-events-none transition-colors duration-300 whitespace-nowrap overflow-hidden text-ellipsis drop-shadow-[0_0_8px_rgba(255,0,68,0.8)]";
-
-                if(loadingTimerInterval) clearInterval(loadingTimerInterval);
-                const overlay = document.getElementById('loadingOverlay');
-                overlay.innerHTML = `
-                    <button onclick="forceCloseLoading()" class="absolute top-4 right-6 text-red-500 hover:text-white font-bold text-3xl transition-colors z-[105]" title="Bypass LLM Load">✕</button>
-                    <div style="text-align: center; max-width: 400px; z-index: 101;">
-                        <p style="color: #ff0044; font-weight: bold; margin-bottom: 10px;">LLM Integration Error</p>
-                        <p style="font-size: 11px; margin-bottom: 20px; word-wrap: break-word;">${error.message}</p>
-                        <button onclick="forceCloseLoading()" style="padding: 8px 16px; border: 1px solid #00ffcc; background: rgba(0,255,204,0.1); color: #00ffcc; cursor: pointer; border-radius: 8px;">Continue Without LLM</button>
-                    </div>
-                `;
-            }
-        }
-
-        async function initializeStateBridge() {
-            try {
-                // Attempt to load external manifests
-                const axResponse = await fetch('./models/AXIOMZ.md').catch(() => null);
-                if (axResponse && axResponse.ok) EXTERNAL_AXIOMZ_MD = await axResponse.text();
-
-                const metaResponse = await fetch('./models/METATEXT.md').catch(() => null);
-                if (metaResponse && metaResponse.ok) EXTERNAL_METATEXT_MD = await metaResponse.text();
-
-                console.log("[STATE_INITIALIZER] External Manifests checked.");
-            } catch (e) {
-                console.warn("[STATE_INITIALIZER] Manifest fetch failed (CORS/Missing). Using DEFAULTs.");
-            }
-        }
-
-        function cancelInference() {
-            logAction("STOP clicked. Inference cancelled & panel closed.", "text-red-500");
-            document.getElementById('outputPanel').classList.add('hidden'); // ALWAYS close panel
-            
-            toggleLoading(false);
-            if (!isInferencing) return;
-            console.log("[EXACTIFY] User interrupted inference.");
-            isInferencing = false;
-            if(document.getElementById('orbitToggleBtn').innerText === "▶ PLAY") isPaused = true;
-            else isPaused = false; 
-            
-            const statusEl = document.getElementById('llmStatus');
-            statusEl.innerText = "LLM INTERRUPTED";
-            statusEl.className = "px-6 py-1 text-sm font-bold tracking-[0.3em] text-red-500 pointer-events-none transition-colors duration-300 drop-shadow-[0_0_8px_rgba(255,0,68,0.8)] whitespace-nowrap overflow-hidden text-ellipsis";
-            setOverlayText("[ INFERENCE CANCELLED ]");
-            
-            setTimeout(() => {
-                statusEl.innerText = "LLM ALIVE";
-                statusEl.className = "px-6 py-1 text-sm font-bold tracking-[0.3em] text-emerald-400 pointer-events-none transition-colors duration-300 drop-shadow-[0_0_8px_rgba(0,255,204,0.8)] whitespace-nowrap overflow-hidden text-ellipsis";
-            }, 3000);
-        }
-        
-        // Unified Few-Shot Prompt Channel
-        const getMetaTextFewShotPrompt = (tgt) => {
-            const syntaxRef = EXTERNAL_METATEXT_MD || DEFAULT_METATEXT_SYNTAX;
-            return `Task: Generate a conceptual ontology for the topic "${tgt}".
-Constraint: You must output ONLY the proprietary METATEXT syntax. Do not use JSON, do not use CSV, do not use markdown, no conversational text.
-Syntax Rules:
-${syntaxRef}
-
-Example 1:
-.| BITCOIN |.| DECENTRALIZATION (No central authority) |.| CRYPTOGRAPHY (Secure hashing) |.
-
-Example 2:
-.| MEDICAL |.| TRIAGE (Patient sorting) |.| ONCOLOGY (Mutation regression) |.
-
-Now generate exactly 10 distinct subtopics in METATEXT format for: ${tgt}`;
-        };
-
-        async function exactify() {
-            const statusEl = document.getElementById('llmStatus');
-            const outputPanel = document.getElementById('outputPanel');
-            const outputContent = document.getElementById('outputContent');
-            
-            if (!window.LLM_INFERENCE) {
-                console.warn("LLM is UNALIVE. Please ensure weights are loaded.");
-                outputPanel.classList.remove('hidden');
-                outputContent.innerHTML += `<div class="mb-4 border-l-2 border-red-500 pl-3">>> SYSTEM WARNING:\n>> window.LLM_INFERENCE is uninitialized.</div>`;
-                return;
-            }
-
-            const inputEl = document.getElementById('addTopic');
-            const rawInput = inputEl.value.trim(); 
-            const upInput = rawInput.toUpperCase();
-            
-            let mode = "";
-            let queries = [];
-
-            if (upInput === "AMPLIFY") {
-                mode = "AMPLIFY";
-            } else if (upInput.startsWith("ASPARKA")) {
-                mode = "aSPARKa";
-                currentTarget = "aSPARKa";
-                
-                const syntaxRef = EXTERNAL_METATEXT_MD || DEFAULT_METATEXT_SYNTAX;
-                const axiomRef = EXTERNAL_AXIOMZ_MD || "No external axioms found.";
-
-                queries.push(`Task: Compile a set of AXIOMZ (foundational principles) defining the ALPHATEXTA (fluid metatext) formatting patterns.
-Constraint: Output ONLY in fluid METATEXT syntax. Terminators are optional. Concept pockets "()" peek into dimensions. English spaces are allowed between pipes. No JSON, no markdown. Do not generate empty pipes.
-Principles: Fluid combinability, no rigidity, best reflection of actual reality, axiomatic lifecycle (aCYCLIXa).
-
-System Manifest Reference:
-${axiomRef}
-
-Syntax Reference:
-${syntaxRef}
-
-Examples to mimic and expand upon:
-${DEFAULT_METASTATE.map(a => a.text).join("\n")}
-
-Generate 5 new conceptual AXIOMZ defining this fluid conceptual fabric:`);
-                
-            } else if (upInput.startsWith("ABILIFY") || upInput.startsWith("STAGFLATION")) {
-                mode = "NATIVE_METATEXT";
-                let targetToken = rawInput.includes(" ") ? rawInput.split(" ")[1] : rawInput;
-                currentTarget = targetToken;
-                
-                queries.push(getMetaTextFewShotPrompt(targetToken));
-            } else if (upInput === "MEDICAL") {
-                mode = "LATERALIZE";
-                queries.push(`Task: Generate exactly 30 distinct related subtopics for the concept: "${upInput}".\nConstraint: Output strictly as a single line of comma-separated values (CSV). Do not include numbers, newlines, or conversational text.`);
-            } else if (upInput === "AXIOMZ") {
-                mode = "LIST_AXIOMZ";
-                
-                outputPanel.classList.remove('hidden');
-                if (!isOutputMaximized) toggleOutputSize();
-
-                let localAxiomsStr = localStorage.getItem('AXIOM_COLLECTOR') || '';
-                
-                let localAxioms = localAxiomsStr.split('\n')
-                                    .map(l => l.trim())
-                                    .filter(l => l.length > 0)
-                                    .map(l => ({ text: l, vector: "LOCAL_AXIOM" }));
-
-                // Merging Default State with Local Memory for the UI
-                const totalAxioms = [...DEFAULT_METASTATE, ...localAxioms];
-
-                const runBlock = document.createElement('div');
-                runBlock.className = "mb-6 pb-4 border-b border-emerald-900/30";
-                runBlock.innerHTML = `<span class="text-yellow-500">> FETCHING COMBINED [METASTATE] MANIFEST...</span><br>
-                                     <span class="text-[9px] text-emerald-700">Combined: ${DEFAULT_METASTATE.length} DEFAULTS + ${localAxioms.length} LOCALIZED BITZ</span><br>`;
-                
-                let listHTML = `<div class="text-cyan-300 font-mono mt-2 bg-black/50 p-2 rounded border border-cyan-900/30 whitespace-pre-wrap">`;
-                let orbTokens = [];
-                totalAxioms.forEach((ax, idx) => {
-                    const isDefault = idx < DEFAULT_METASTATE.length;
-                    listHTML += `<div class="mb-2 pb-2 border-b border-emerald-900/20">
-                        <span class="${isDefault ? 'text-blue-400' : 'textpurple-400'} font-bold text-[10px]">IDX: ${idx} | VECTOR: ${ax.vector} | ${isDefault ? 'ORIGIN: DEFAULT' : 'ORIGIN: LOCAL'}</span><br>
-                        <span class="text-emerald-300 text-[11px]">${ax.text}</span>
-                    </div>`;
-                    
-                    let parts = ax.text.split('|');
-                    if (parts.length > 1) {
-                        let concept = parts[1].replace(/\./g, '').trim();
-                        if (concept) orbTokens.push(concept);
-                    }
-                });
-                listHTML += `</div>`;
-                runBlock.innerHTML += listHTML;
-                
-                if(orbTokens.length > 0) {
-                    applyWordsToOrbs(orbTokens.slice(0, 10), "AXIOMZ");
-                }
-                
-                outputContent.appendChild(runBlock);
-                outputContent.scrollTop = outputContent.scrollHeight;
-                
-                setOverlayText(`[ AXIOMZ COLLECTOR RETRIEVED ]`);
-                return;
-            } else {
-                mode = "INITZIFY";
-                queries.push(`Task: Generate exactly 10 related subtopics for the concept: "${upInput}".\nConstraint: Output strictly as a single line of comma-separated values (CSV). Do not include numbers, newlines, or conversational text.`);
-            }
-            
-            try {
-                isInferencing = true;
-                isPaused = true; 
-                
-                const processLabel = mode === "AMPLIFY" ? "AMPLIFY GRID" : (mode === "NATIVE_METATEXT" ? "FEW_SHOT_NATIVE" : (mode === "aSPARKa" ? "ALPHATEXTA_AXIOMZ" : mode));
-                toggleLoading(true, `EXECUTING [${processLabel}] ...`);
-                statusEl.innerText = "LLM THINKING...";
-                statusEl.className = "px-6 py-1 text-sm font-bold tracking-[0.3em] text-yellow-500 pointer-events-none transition-colors duration-300 drop-shadow-[0_0_8px_rgba(255,170,0,0.8)] whitespace-nowrap overflow-hidden text-ellipsis";
-                setOverlayText(`[ EXTRACTING: ${mode === "AMPLIFY" || mode === "NATIVE_METATEXT" ? currentTarget : rawInput} ]`);
-                
-                outputPanel.classList.remove('hidden');
-                if ((mode === "AMPLIFY" || mode === "NATIVE_METATEXT" || mode === "aSPARKa") && !isOutputMaximized) toggleOutputSize(); 
-                
-                const runBlock = document.createElement('div');
-                runBlock.className = "mb-6 pb-4 border-b border-emerald-900/30";
-                
-                runBlock.innerHTML = `<span class="text-yellow-500">> Initiating [${processLabel}_PROMPTZ] extraction for: "${mode === "AMPLIFY" || mode === "NATIVE_METATEXT" || mode === "aSPARKa" ? currentTarget : rawInput}"...</span><br>`;
-
-                if (isFirstQuery) {
-                    runBlock.innerHTML += `<span class="text-yellow-600 font-bold">> [SYSTEM ALERT] WebGPU Cold Start Detected.\n> Compiling compute shaders for your GPU. This 1-time operation may take 1-5 minutes. The browser will appear frozen until the first token streams.</span><br>`;
-                }
-                
-                const streamOutputEl = document.createElement('div');
-                streamOutputEl.className = "mt-2 break-words";
-                runBlock.appendChild(streamOutputEl);
-                
-                outputContent.appendChild(runBlock);
-                outputContent.scrollTop = outputContent.scrollHeight;
-
-                inputEl.style.backgroundColor = "rgba(0, 255, 204, 0.2)";
-                setTimeout(() => inputEl.style.backgroundColor = "rgba(0, 15, 15, 0.7)", 300);
-
-                await new Promise(resolve => setTimeout(resolve, 150));
-
-                let hasStartedStreaming = false;
-                const inferenceStartTime = Date.now();
-                let aggregatedFullText = "";
-
-                // --- AMPLIFY BRANCH LOGIC ---
-                if (mode === "AMPLIFY") {
-                    const baseTopic = currentTarget;
-                    
-                    const q1 = `Task: Generate exactly 10 distinct related subtopics for the concept: "${baseTopic}".\nConstraint: Output strictly as a single line of comma-separated values (CSV). Do not include numbers, newlines, or conversational text.`;
-                    
-                    const sectionTag = document.createElement('div');
-                    sectionTag.className = "text-cyan-400 mt-2 mb-1 text-xs font-bold";
-                    sectionTag.innerText = `> EXTRACTING PRIMARY PILLARS FOR [${baseTopic}]:`;
-                    streamOutputEl.appendChild(sectionTag);
-
-                    const rawSectionContent = document.createElement('div');
-                    rawSectionContent.className = "text-gray-300 font-mono text-sm pl-4 mb-2 border-l-2 border-cyan-800";
-                    streamOutputEl.appendChild(rawSectionContent);
-
-                    let stage1Text = "";
-                    await window.LLM_INFERENCE.generateResponse(q1, (partialResult, complete) => {
-                        if (!isInferencing) return;
-                        if (!hasStartedStreaming) {
-                            hasStartedStreaming = true;
-                            const coldStartSeconds = ((Date.now() - inferenceStartTime) / 1000).toFixed(1);
-                            toggleLoading(false);
-                            const sysAlert = document.createElement('div');
-                            sysAlert.className = "text-emerald-500 font-bold mb-2 text-xs";
-                            sysAlert.innerText = `> [SYS] Stream started. Wait time: ${coldStartSeconds}s.`;
-                            runBlock.insertBefore(sysAlert, streamOutputEl);
-                        }
-                        rawSectionContent.textContent += partialResult;
-                        stage1Text += partialResult;
-                        outputContent.scrollTop = outputContent.scrollHeight;
-                    });
-
-                    if (!isInferencing) return;
-
-                    let primaryTokens = stage1Text.replace(/[*"']/g, '').split(/[\n,\|]+/)
-                        .map(t => t.replace(/^[0-9]+[\.\-\)]?\s*/g, '').trim())
-                        .filter(t => t.length > 1 && t.toUpperCase() !== baseTopic.toUpperCase());
-                    
-                    if (primaryTokens.length > 10) primaryTokens = primaryTokens.slice(0, 10);
-                    while(primaryTokens.length < 10) primaryTokens.push(`NUL_${primaryTokens.length}`);
-
-                    const seenWords = new Set();
-                    seenWords.add(baseTopic.toUpperCase());
-                    primaryTokens.forEach(t => seenWords.add(t.toUpperCase()));
-
-                    let gridColumns = [];
-
-                    for(let i = 0; i < primaryTokens.length; i++) {
-                        if (!isInferencing) break;
-                        const pillar = primaryTokens[i];
-                        
-                        if (pillar.startsWith("NUL_")) {
-                            gridColumns.push(new Array(10).fill("_"));
-                            continue;
-                        }
-
-                        const q2 = `Task: Generate exactly 10 distinct related subtopics for the concept: "${pillar}" in the context of "${baseTopic}".\nConstraint: Output strictly as a single line of comma-separated values (CSV). Do not include numbers, newlines, or conversational text.`;
-                        
-                        const subTag = document.createElement('div');
-                        subTag.className = "text-yellow-400 mt-2 mb-1 text-xs font-mono";
-                        subTag.innerText = `> AMPLIFYING: [${pillar}] ...`;
-                        streamOutputEl.appendChild(subTag);
-                        
-                        const subContent = document.createElement('div');
-                        subContent.className = "text-gray-400 font-mono text-[11px] pl-4 mb-2 border-l-2 border-yellow-800";
-                        streamOutputEl.appendChild(subContent);
-                        outputContent.scrollTop = outputContent.scrollHeight;
-
-                        let stage2Text = "";
-                        await window.LLM_INFERENCE.generateResponse(q2, (partialResult, complete) => {
-                            if (!isInferencing) return;
-                            subContent.textContent += partialResult;
-                            stage2Text += partialResult;
-                            outputContent.scrollTop = outputContent.scrollHeight;
-                        });
-
-                        let secondaryTokens = stage2Text.replace(/[*"']/g, '').split(/[\n,\|]+/)
-                            .map(t => t.replace(/^[0-9]+[\.\-\)]?\s*/g, '').trim())
-                            .filter(t => t.length > 1);
-
-                        let processedCol = [];
-                        for (let k = 0; k < 10; k++) {
-                            let token = secondaryTokens[k];
-                            if (token) {
-                                let wordToCompare = token.toUpperCase();
-                                if (seenWords.has(wordToCompare)) {
-                                    processedCol.push("_");
-                                } else {
-                                    seenWords.add(wordToCompare);
-                                    processedCol.push(token);
-                                }
-                            } else {
-                                processedCol.push("_");
-                            }
-                        }
-                        gridColumns.push(processedCol);
-                    }
-
-                    if (!isInferencing) return;
-
-                    let tableHTML = `<div class="overflow-x-auto w-full mt-4 border border-emerald-600/50 shadow-[0_0_15px_rgba(0,255,204,0.1)]">
-                        <table class="w-full text-left border-collapse text-[10px] text-emerald-300">
-                        <thead><tr class="bg-emerald-950/60">`;
-                    
-                    primaryTokens.forEach(t => tableHTML += `<th class="border border-emerald-900 p-2 text-emerald-400 font-black tracking-wider uppercase text-center min-w-[100px] whitespace-nowrap hover:bg-emerald-900/80 transition-colors">${t}</th>`);
-                    tableHTML += `</tr></thead><tbody class="bg-black/40">`;
-                    
-                    for(let row = 0; row < 10; row++) {
-                        tableHTML += `<tr>`;
-                        for(let col = 0; col < gridColumns.length; col++) {
-                            let cellVal = gridColumns[col][row] || "_";
-                            let cellClass = cellVal === "_" ? "text-emerald-900 text-center" : "text-emerald-100 text-center hover:text-white transition-colors cursor-crosshair";
-                            tableHTML += `<td class="border border-emerald-900/50 p-2 ${cellClass}">${cellVal}</td>`;
-                        }
-                        tableHTML += `</tr>`;
-                    }
-                    tableHTML += `</tbody></table></div>`;
-                    
-                    const gridContainer = document.createElement('div');
-                    gridContainer.innerHTML = tableHTML;
-                    runBlock.appendChild(gridContainer);
-                    
-                    aggregatedFullText = primaryTokens.join(", "); 
-                } 
-                // --- STANDARD, NATIVE METATEXT & ASPARKA BRANCH LOGIC ---
-                else {
-                    for (let q = 0; q < queries.length; q++) {
-                        if (!isInferencing) break;
-
-                        const sectionTag = document.createElement('div');
-                        sectionTag.className = "text-cyan-400 mt-2 mb-1 text-xs font-bold";
-                        sectionTag.innerText = `> RAW LLM RESPONSE:`;
-                        streamOutputEl.appendChild(sectionTag);
-
-                        const rawSectionContent = document.createElement('div');
-                        rawSectionContent.className = "text-gray-300 font-mono text-sm pl-4 mb-2 border-l-2 border-cyan-800 whitespace-pre-wrap";
-                        streamOutputEl.appendChild(rawSectionContent);
-
-                        let currentSectionText = "";
-
-                        await window.LLM_INFERENCE.generateResponse(queries[q], (partialResult, complete) => {
-                            if (!isInferencing) return; 
-
-                            if (!hasStartedStreaming) {
-                                hasStartedStreaming = true;
-                                const coldStartSeconds = ((Date.now() - inferenceStartTime) / 1000).toFixed(1);
-                                toggleLoading(false);
-                                const sysAlert = document.createElement('div');
-                                sysAlert.className = "text-emerald-500 font-bold mb-2 text-xs";
-                                sysAlert.innerText = `> [SYS] Stream started. Wait time: ${coldStartSeconds}s.`;
-                                runBlock.insertBefore(sysAlert, streamOutputEl);
-                            }
-
-                            if (partialResult) {
-                                rawSectionContent.textContent += partialResult;
-                                currentSectionText += partialResult;
-                                outputContent.scrollTop = outputContent.scrollHeight; 
-                            }
-                        });
-
-                        aggregatedFullText += currentSectionText + (q < queries.length - 1 ? " | " : "");
-                    }
-                }
-                
-                isFirstQuery = false;
-
-                if (!isInferencing) return;
-
-                const totalTime = ((Date.now() - inferenceStartTime) / 1000).toFixed(1);
-                
-                const endAlert = document.createElement('div');
-                endAlert.className = "text-emerald-600 font-bold mt-3 text-xs";
-                endAlert.innerText = `> [SYS] Inference stream completed in ${totalTime}s. Parsing logic engaged...`;
-                runBlock.appendChild(endAlert);
-                outputContent.scrollTop = outputContent.scrollHeight;
-
-                // --- ALPHATEXTA (aSPARKa) FORGIVING PARSER ---
-                if (mode === "aSPARKa") {
-                    let cleanMetaText = aggregatedFullText.trim();
-                    
-                    // The forgiving regex: matches loosely separated dimensional chunks for the orbs.
-                    let rawTokens = cleanMetaText.split(/(?:\.\||\||~>|&|\n)+/)
-                        .map(t => t.replace(/\|\.?$/, '').trim())
-                        // Hygiene Filter to stop "Collapse Repetition" (empty pipes)
-                        .filter(t => t.length > 2 && t.length < 40 && !/^\|+$/.test(t) && t.replace(/[^a-zA-Z0-9]/g, '').length > 0); 
-                    
-                    let rootTopic = currentTarget;
-                    let subTopics = rawTokens.filter(t => t.toUpperCase() !== rootTopic.toUpperCase());
-                    
-                    if (subTopics.length === 0) subTopics = ["FLUID_DIMZ", "NO_RESTRICTION"];
-
-                    const resultDiv = document.createElement('div');
-                    resultDiv.className = "text-purple-400 font-mono mt-3 text-[11px] border-t border-purple-900/50 pt-2 bg-black/40 p-2 rounded shadow-[inset_0_0_15px_rgba(218,112,214,0.1)]";
-                    resultDiv.innerHTML = `
-                        <span class="text-emerald-400 font-bold tracking-widest uppercase">> [ALPHATEXTA / AXIOM_COLLECTOR ENCODING]:</span>
-                        <div class="text-cyan-300 break-all font-mono mt-2 bg-black/50 p-2 rounded border border-cyan-900/30 whitespace-pre-wrap">${cleanMetaText}</div>
-                        <br><span class="text-emerald-600 font-bold">> [SYS] FLAWLESS FLUID PARSE ACHIEVED. AXIOMZ LOGGED.</span>`;
-                    
-                    runBlock.appendChild(resultDiv);
-                    outputContent.scrollTop = outputContent.scrollHeight;
-
-                    // Update UI Orbs
-                    applyWordsToOrbs(subTopics.slice(0, 10), rootTopic); 
-
-                    // AXIOM_COLLECTOR Specific Storage Pipeline (String Based)
-                    let axiomColStr = localStorage.getItem('AXIOM_COLLECTOR') || '';
-                    axiomColStr += (axiomColStr ? "\n" : "") + cleanMetaText;
-                    localStorage.setItem('AXIOM_COLLECTOR', axiomColStr);
-                }
-                // --- FEW-SHOT NATIVE METATEXT PARSER ---
-                else if (mode === "NATIVE_METATEXT") {
-                    let cleanMetaText = aggregatedFullText.trim();
-                    if (!cleanMetaText.startsWith('.|')) cleanMetaText = '.| ' + currentTarget + ' | ' + cleanMetaText;
-                    
-                    let rawTokens = cleanMetaText.split('.|')
-                        .map(t => t.replace(/\|\.?$/, '').trim())
-                        // Hygiene Filter to stop "Collapse Repetition" (empty pipes)
-                        .filter(t => t.length > 0 && t !== '.' && !/^\|+$/.test(t) && t.replace(/[^a-zA-Z0-9]/g, '').length > 0);
-                    
-                    let rootTopic = currentTarget;
-                    let subTopics = rawTokens.filter(t => t.toUpperCase() !== currentTarget.toUpperCase());
-                    
-                    if (subTopics.length === 0) subTopics = ["NULL_DATA"];
-
-                    const resultDiv = document.createElement('div');
-                    resultDiv.className = "text-purple-400 font-mono mt-3 text-[11px] border-t border-purple-900/50 pt-2 bg-black/40 p-2 rounded shadow-[inset_0_0_15px_rgba(218,112,214,0.1)]";
-                    resultDiv.innerHTML = `
-                        <span class="text-emerald-400 font-bold tracking-widest uppercase">> [RAW NATIVE METATEXT CAPTURED]:</span>
-                        <div class="text-cyan-300 break-all font-mono mt-2 bg-black/50 p-2 rounded border border-cyan-900/30">${cleanMetaText}</div>
-                        <br><span class="text-emerald-600 font-bold">> [SYS] FLAWLESS PARSE ACHIEVED. PARENTHETICAL SYNTAX PLOTTED.</span>`;
-                    
-                    runBlock.appendChild(resultDiv);
-                    outputContent.scrollTop = outputContent.scrollHeight;
-
-                    applyWordsToOrbs(subTopics, rootTopic);
-                }
-                // --- STANDARD CSV PARSER ---
-                else if (mode !== "AMPLIFY") {
-                    const targetMetaTextTopic = rawInput;
-                    parseAndApplyMetaText(aggregatedFullText, mode, targetMetaTextTopic, runBlock);
-                }
-
-                isInferencing = false;
-                
-                if(document.getElementById('orbitToggleBtn').innerText !== "▶ PLAY") {
-                    isPaused = false;
-                }
-                
-                statusEl.innerText = "LLM ALIVE";
-                statusEl.className = "px-6 py-1 text-sm font-bold tracking-[0.3em] text-emerald-400 pointer-events-none transition-colors duration-300 drop-shadow-[0_0_8px_rgba(0,255,204,0.8)] whitespace-nowrap overflow-hidden text-ellipsis";
-
-            } catch (err) {
-                if (!isInferencing) return;
-                
-                console.error("[EXACTIFY] Inference Failed:", err);
-                isInferencing = false;
-                if(document.getElementById('orbitToggleBtn').innerText !== "▶ PLAY") isPaused = false;
-                toggleLoading(false);
-                
-                statusEl.innerText = `LLM ERROR - ${err.message}`;
-                statusEl.className = "px-6 py-1 text-sm font-bold tracking-[0.3em] text-red-500 pointer-events-none transition-colors duration-300 drop-shadow-[0_0_8px_rgba(255,0,68,0.8)] whitespace-nowrap overflow-hidden text-ellipsis";
-                setOverlayText("[ SYSTEM ERROR ]");
-                
-                let runBlock = outputContent.lastElementChild;
-                if (!runBlock) {
-                    runBlock = document.createElement('div');
-                    outputContent.appendChild(runBlock);
-                }
-                const errAlert = document.createElement('div');
-                errAlert.className = "text-red-500 font-bold mt-4 text-xs border border-red-500/30 p-2 rounded";
-                errAlert.innerText = `>> CRITICAL FAILURE: ${err.message}`;
-                runBlock.appendChild(errAlert);
-                outputContent.scrollTop = outputContent.scrollHeight;
-            }
-        }
-
-        function initGlow() {
-            const canvasHover = document.createElement('canvas');
-            canvasHover.width = 128; canvasHover.height = 128;
-            const ctxHover = canvasHover.getContext('2d');
-            const gradHover = ctxHover.createRadialGradient(64, 64, 0, 64, 64, 64);
-            gradHover.addColorStop(0, 'rgba(218, 112, 214, 0.9)');
-            gradHover.addColorStop(0.3, 'rgba(218, 112, 214, 0.4)');
-            gradHover.addColorStop(1, 'rgba(218, 112, 214, 0)');
-            ctxHover.fillStyle = gradHover; ctxHover.fillRect(0, 0, 128, 128);
-            const texHover = new THREE.CanvasTexture(canvasHover);
-            sharedGlowMaterial = new THREE.SpriteMaterial({ map: texHover, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false });
-
-            const canvasSel = document.createElement('canvas');
-            canvasSel.width = 128; canvasSel.height = 128;
-            const ctxSel = canvasSel.getContext('2d');
-            const gradSel = ctxSel.createRadialGradient(64, 64, 0, 64, 64, 64);
-            gradSel.addColorStop(0, 'rgba(0, 255, 204, 0.8)');
-            gradSel.addColorStop(0.3, 'rgba(0, 255, 204, 0.3)');
-            gradSel.addColorStop(1, 'rgba(0, 255, 204, 0)');
-            ctxSel.fillStyle = gradSel; ctxSel.fillRect(0, 0, 128, 128);
-            const texSel = new THREE.CanvasTexture(canvasSel);
-            sharedSelectedGlowMaterial = new THREE.SpriteMaterial({ map: texSel, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false });
-        }
-
-        function addUserOrb() { console.log("Adding dynamic logic stub for future Gemma integration."); }
-
-        function initThreeJS() {
-            hasInitializedThreeJS = true;
+        function initGallery() {
             scene = new THREE.Scene();
+            scene.fog = new THREE.FogExp2(0x020205, 0.006);
+
             camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 30, 90);
+
             renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
             document.getElementById('canvas-container').appendChild(renderer.domElement);
 
-            raycaster = new THREE.Raycaster();
-            mouse = new THREE.Vector2();
-
             controls = new THREE.OrbitControls(camera, renderer.domElement);
-            controls.enableDamping = true; controls.dampingFactor = 0.08;
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.autoRotate = true;
+            controls.autoRotateSpeed = 0.4;
 
-            initGlow(); setupEnvironment();
-            camera.position.set(0, -100, 0); camera.lookAt(0,0,0);
-            // camera.position.set(20, 20, 45); camera.lookAt(0,0,0);
-            
-            switchTopic("FINANCIAL");
+            const ambientLight = new THREE.AmbientLight(0x404040, 1.5);
+            scene.add(ambientLight);
+            const dirLight = new THREE.DirectionalLight(0xffffff, 1);
+            dirLight.position.set(20, 50, 20);
+            scene.add(dirLight);
+
+            sharedGlowTex = createGlowTexture();
+
+            GALLERY_DATA.forEach(data => {
+                const group = new THREE.Group();
+                group.position.set(data.x, data.y, data.z);
+                let mainMesh = null;
+                let animData = { type: data.type, subMeshes: [] };
+
+                if (data.type === 'NEBULA') {
+                    const geo = new THREE.SphereGeometry(data.size, 64, 64);
+                    const mat = new THREE.ShaderMaterial({
+                        uniforms: THREE.UniformsUtils.clone(NebulaShader.uniforms),
+                        vertexShader: NebulaShader.vertexShader,
+                        fragmentShader: NebulaShader.fragmentShader,
+                        transparent: true, depthWrite: false, side: THREE.BackSide, blending: THREE.AdditiveBlending
+                    });
+                    mat.uniforms.baseColor.value = new THREE.Color(data.color);
+                    mat.uniforms.nebulaColor.value = new THREE.Color(data.color2);
+                    mainMesh = new THREE.Mesh(geo, mat);
+                    animData.shader = mat;
+
+                } else if (data.type === 'SPARK_NEBULA') {
+                    const fogGeo = new THREE.BufferGeometry();
+                    const fogPos = [];
+                    for(let i=0; i<200; i++) {
+                        const r = data.size * Math.cbrt(Math.random());
+                        const theta = Math.random() * 2 * Math.PI;
+                        const phi = Math.acos(2 * Math.random() - 1);
+                        fogPos.push(r * Math.sin(phi) * Math.cos(theta), r * Math.sin(phi) * Math.sin(theta), r * Math.cos(phi));
+                    }
+                    fogGeo.setAttribute('position', new THREE.Float32BufferAttribute(fogPos, 3));
+                    const fogMat = new THREE.PointsMaterial({
+                        color: data.color, size: data.size * 0.4, map: sharedGlowTex, 
+                        transparent: true, opacity: 0.9, depthWrite: false, blending: THREE.AdditiveBlending
+                    });
+                    mainMesh = new THREE.Points(fogGeo, fogMat);
+                    
+                    // Central Spark Core
+                    const coreMat = new THREE.SpriteMaterial({ map: sharedGlowTex, color: data.color2, transparent: true, blending: THREE.AdditiveBlending });
+                    const core = new THREE.Sprite(coreMat);
+                    core.scale.set(data.size*1.5, data.size*1.5, 1);
+                    mainMesh.add(core);
+
+                } else if (data.type === 'GLASS_NUCLEUS') {
+                    const shellGeo = new THREE.SphereGeometry(data.size, 32, 32);
+                    const shellMat = new THREE.MeshStandardMaterial({ 
+                        color: data.color, transparent: true, opacity: 0.15, roughness: 0.0, metalness: 1.0, depthWrite: false
+                    });
+                    mainMesh = new THREE.Mesh(shellGeo, shellMat);
+                    
+                    // Outer glow rim
+                    const rimGeo = new THREE.SphereGeometry(data.size*1.02, 32, 32);
+                    const rimMat = new THREE.MeshBasicMaterial({color: data.color, transparent: true, opacity: 0.1, wireframe: true});
+                    mainMesh.add(new THREE.Mesh(rimGeo, rimMat));
+
+                    // Sub-spheres (solid sub-states)
+                    for(let i=0; i<5; i++) {
+                        const sGeo = new THREE.SphereGeometry(data.size * 0.25, 16, 16);
+                        const sMat = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: data.color2, emissiveIntensity: 1.0 });
+                        const sMesh = new THREE.Mesh(sGeo, sMat);
+                        sMesh.position.set((Math.random()-0.5)*data.size*1.2, (Math.random()-0.5)*data.size*1.2, (Math.random()-0.5)*data.size*1.2);
+                        mainMesh.add(sMesh);
+                        animData.subMeshes.push(sMesh);
+                    }
+
+                } else if (data.type === 'WIRED_CORE') {
+                    // Outer Wireframe Sphere
+                    const shellGeo = new THREE.SphereGeometry(data.size, 12, 12);
+                    const edges = new THREE.WireframeGeometry(shellGeo);
+                    const lineMat = new THREE.LineBasicMaterial({ color: data.color, transparent: true, opacity: 0.5 });
+                    mainMesh = new THREE.LineSegments(edges, lineMat);
+                    
+                    // Inner solid core
+                    const coreGeo = new THREE.IcosahedronGeometry(data.size * 0.4);
+                    const coreMat = new THREE.MeshStandardMaterial({ color: data.color2, emissive: data.color2, emissiveIntensity: 0.5, metalness: 0.8, roughness: 0.2 });
+                    const coreMesh = new THREE.Mesh(coreGeo, coreMat);
+                    mainMesh.add(coreMesh);
+                    animData.subMeshes.push(coreMesh);
+
+                } else if (data.type === 'META_ALPHA') { // Tetrahedron
+                    mainMesh = createGem(new THREE.TetrahedronGeometry(data.size), data.color, data.size);
+                } else if (data.type === 'META_BETA') { // Octahedron
+                    mainMesh = createGem(new THREE.OctahedronGeometry(data.size), data.color, data.size);
+                } else if (data.type === 'META_GAMMA') { // Icosahedron
+                    mainMesh = createGem(new THREE.IcosahedronGeometry(data.size), data.color, data.size);
+                } else if (data.type === 'META_DELTA') { // Dodecahedron
+                    mainMesh = createGem(new THREE.DodecahedronGeometry(data.size), data.color, data.size);
+                }
+
+                if (mainMesh) {
+                    group.add(mainMesh);
+                    animData.mesh = mainMesh;
+                }
+                
+                // Add Label
+                const isGem = data.type.startsWith('META_');
+                const label = createLabel(data.label, data.size, isGem);
+                group.add(label);
+
+                scene.add(group);
+                orbGroup.push({ group, animData, ...data });
+            });
+
+            // Draw central connections between Metacognitive GEMZ
+            const gemz = orbGroup.filter(o => o.type.startsWith('META_'));
+            for(let i=0; i<gemz.length; i++) {
+                for(let j=i+1; j<gemz.length; j++) {
+                    const material = new THREE.LineBasicMaterial({ color: 0xff00ff, transparent: true, opacity: 0.15 });
+                    const geometry = new THREE.BufferGeometry().setFromPoints([
+                        new THREE.Vector3(gemz[i].x, gemz[i].y, gemz[i].z),
+                        new THREE.Vector3(gemz[j].x, gemz[j].y, gemz[j].z)
+                    ]);
+                    const line = new THREE.Line(geometry, material);
+                    scene.add(line);
+                }
+            }
+
+            populateLegend();
+            window.addEventListener('resize', onWindowResize, false);
             animate();
-
-            window.addEventListener('pointerup', onPointerUp);
-            window.addEventListener('pointermove', onPointerMove);
-            window.addEventListener('resize', onWindowResize);
         }
 
-        function createLabel(text, pos) {
-            const canvas = document.createElement('canvas');
-            canvas.width = 256; canvas.height = 64;
-            const ctx = canvas.getContext('2d');
-            ctx.fillStyle = 'rgba(0, 255, 204, 0.8)'; 
-            ctx.font = 'bold 32px Courier New'; 
-            ctx.textAlign = 'center'; ctx.fillText(text, 128, 32);
-            const tex = new THREE.CanvasTexture(canvas);
-            const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true }));
-            sprite.scale.set(7, 1.75, 1); sprite.position.copy(pos); scene.add(sprite);
-        }
-
-        function setupEnvironment() {
-            const grid = new THREE.GridHelper(56, 14, 0x004433, 0x001111);
-            grid.position.y = 22; scene.add(grid);
-
-            const ambient = new THREE.AmbientLight(0xffffff, 0.2); scene.add(ambient);
-            const spot1 = new THREE.DirectionalLight(0xffffff, 0.9); spot1.position.set(20, 50, 20); scene.add(spot1);
-            const spot2 = new THREE.DirectionalLight(0x00ffcc, 0.5); spot2.position.set(-20, -10, 30); scene.add(spot2);
-
-            const makeCone = (color, pos, rot, id, label) => {
-                const geo = new THREE.ConeGeometry(0.8, 2.2, 16);
-                const mat = new THREE.MeshStandardMaterial({ color, emissive: color, emissiveIntensity: 0.50, metalness: 1.9, roughness: 0.44 });
-                const cone = new THREE.Mesh(geo, mat);
-                cone.position.copy(pos); cone.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0), rot);
-                cone.userData = { isCone: true, axisId: id, originalEmissiveHex: mat.emissive.getHex(), originalEmissiveInt: 1.0 };
-                scene.add(cone); interactableCones.push(cone);
-                
-                let labelPos = pos.clone();
-                if(id === 'Y_TOP') labelPos.y += 2.5; else if(id === 'Y_BOTTOM') labelPos.y -= 2.5; else labelPos.y -= 2.5;
-                createLabel(label, labelPos);
-            };
-
-            makeCone(0x00ffcc, new THREE.Vector3(0, 24, 0), new THREE.Vector3(0, 1, 0), 'Y_TOP', 'FOCUS_OUT');
-            makeCone(0x004433, new THREE.Vector3(0, -140, 0), new THREE.Vector3(0, -1, 0), 'Y_BOTTOM', 'FOCUS_IN');
-            makeCone(0x00ffff, new THREE.Vector3(0, 0, 24), new THREE.Vector3(0, 0, 1), 'Z_FRONT', 'NOW');
-            makeCone(0x0088cc, new THREE.Vector3(0, 0, -24), new THREE.Vector3(0, 0, -1), 'Z_BACK', 'THEN');
-            makeCone(0xff0044, new THREE.Vector3(-24, 0, 0), new THREE.Vector3(-1, 0, 0), 'X_LEFT', 'HERE');
-            makeCone(0x0066ff, new THREE.Vector3(24, 0, 0), new THREE.Vector3(1, 0, 0), 'X_RIGHT', 'THERE');
-        }
-
-        function switchDomain(domainKey) {
-            if(DATA_MAP[domainKey]) currentDomain = domainKey;
-            switchTopic(domainKey);
-        }
-
-        function switchTopic(key) {
-            currentTarget = key;
-            const selectEl = document.getElementById('domainSelect');
-            let optionExists = Array.from(selectEl.options).some(opt => opt.value === key);
-            if (!optionExists) {
-                const newOpt = document.createElement('option');
-                newOpt.value = key; newOpt.innerText = key; selectEl.appendChild(newOpt);
-            }
-            selectEl.value = key;
-
-            orbz.forEach(o => scene.remove(o)); netzLines.forEach(l => scene.remove(l.mesh));
-            orbz = []; netzLines = []; closeInfo(); 
-            
-            const domainData = DATA_MAP[currentDomain] || DATA_MAP["FINANCIAL"];
-            const nodesArray = domainData.nodes || []; 
-            nodesArray.forEach(createOrb); updateNetz(); renderReels(domainData);
-        }
-
-        function createOrb(d) {
-            const isCenter = d.label === currentTarget;
-            const finalSize = isCenter ? d.size * 1.4 : d.size; 
-            const geo = new THREE.SphereGeometry(finalSize, 32, 32);
-            let mat; let subMesh = null; let sparkSystem = null; let moonsGroup = null;
-            
-            if (isCenter) { d.color = 0xffaa00; d.texMode = 'cluster_core'; }
-            const baseEmissiveIntensity = isCenter ? 1.5 : 0.15;
-            
-            const common = { color: d.color, metalness: 0.7, roughness: 0.3, emissive: d.color, emissiveIntensity: baseEmissiveIntensity };
-
-            if (d.texMode === 'planetoid') {
-                mat = new THREE.MeshStandardMaterial({...common, roughness: 0.9, metalness: 0.1});
-                const atmGeo = new THREE.SphereGeometry(finalSize * 1.15, 16, 16);
-                const atmMat = new THREE.MeshBasicMaterial({color: d.color, wireframe: true, transparent: true, opacity: 0.2});
-                subMesh = new THREE.Mesh(atmGeo, atmMat);
-            } else if (d.texMode === 'hollow_core') {
-                mat = new THREE.MeshStandardMaterial({...common, wireframe: true, transparent: true, opacity: 0.4});
-                const nucGeo = new THREE.SphereGeometry(finalSize * 0.4, 16, 16);
-                const nucMat = new THREE.MeshStandardMaterial({color: 0xffffff, emissive: d.color, emissiveIntensity: 1.5});
-                subMesh = new THREE.Mesh(nucGeo, nucMat);
-            } else if (d.texMode === 'cluster_core') {
-                mat = new THREE.MeshStandardMaterial({...common, transparent: true, opacity: 0.3, roughness: 0.1, metalness: 0.8});
-                subMesh = new THREE.Group();
-                const polyGeo = new THREE.DodecahedronGeometry(finalSize * 0.45, 0);
-                const polyMat = new THREE.MeshStandardMaterial({color: 0xffffff, emissive: d.color, emissiveIntensity: 1.5, metalness: 0.6, roughness: 0.2});
-                const polyhedron = new THREE.Mesh(polyGeo, polyMat);
-                const edgeGeo = new THREE.WireframeGeometry(polyGeo);
-                const edgeMat = new THREE.LineBasicMaterial({ color: 0xffaa00, transparent: true, opacity: 0.5 });
-                const edges = new THREE.LineSegments(edgeGeo, edgeMat);
-                polyhedron.add(edges); subMesh.add(polyhedron);
-            } else if (d.texMode === 'metallic') { mat = new THREE.MeshStandardMaterial({...common, metalness: 1.0, roughness: 0.1}); }
-            else if (d.texMode === 'foggy') {
-                mat = new THREE.MeshStandardMaterial({...common, transparent: true, opacity: 0.15, roughness: 1.0, metalness: 0.0, depthWrite: false});
-                
-                subMesh = new THREE.Group();
-                
-                // Volumetric Dark Nebula point cloud
-                const ptsGeo = new THREE.BufferGeometry();
-                const ptsPos = [];
-                const ptCount = 250; // Performant density
-                for(let i=0; i<ptCount; i++){
-                    // Distribute points spherically
-                    const r = finalSize * 1.2 * Math.cbrt(Math.random());
-                    const theta = Math.random() * 2 * Math.PI;
-                    const phi = Math.acos(2 * Math.random() - 1);
-                    ptsPos.push(r * Math.sin(phi) * Math.cos(theta), r * Math.sin(phi) * Math.sin(theta), r * Math.cos(phi));
-                }
-                ptsGeo.setAttribute('position', new THREE.Float32BufferAttribute(ptsPos, 3));
-                
-                // Darkened cloud appearance
-                const baseColor = new THREE.Color(d.color);
-                const darkColor = baseColor.clone().lerp(new THREE.Color(0x110022), 0.6); // Deep purple/dark tint
-                
-                const ptsMat = new THREE.PointsMaterial({
-                    color: darkColor,
-                    size: finalSize, // * 0.8, // Large overlapping sprites
-                    transparent: true,
-                    opacity: 0.3,
-                    depthWrite: false,
-                    blending: THREE.NormalBlending
-                });
-                const cloud = new THREE.Points(ptsGeo, ptsMat);
-                subMesh.add(cloud);
-                
-                // Subtle hazy boundary
-                const fogGeo = new THREE.SphereGeometry(finalSize, 8, 8);
-                const fogMat = new THREE.MeshBasicMaterial({color: d.color, transparent: true, opacity: 0.08, wireframe: true});
-                subMesh.add(new THREE.Mesh(fogGeo, fogMat));
-            }
-            else if (d.texMode === 'wireframe') { mat = new THREE.MeshStandardMaterial({...common, wireframe: true, emissiveIntensity: 0.8}); }
-            else if (d.texMode === 'glass') { mat = new THREE.MeshStandardMaterial({...common, transparent: true, opacity: 0.4, roughness: 0, metalness: 1.0}); }
-            else { mat = new THREE.MeshStandardMaterial({...common, roughness: 1.0, metalness: 0.1}); }
-
-            const orb = new THREE.Mesh(geo, mat); if (subMesh) orb.add(subMesh);
-            
-            if (isCenter) {
-                const sparkGeo = new THREE.BufferGeometry(); const sparkPos = []; const sparkRadius = finalSize * 1.05; 
-                for(let i=0; i<100; i++){
-                    const u = Math.random(), v = Math.random();
-                    const theta = u * 2.0 * Math.PI, phi = Math.acos(2.0 * v - 1.0);
-                    sparkPos.push(sparkRadius * Math.sin(phi) * Math.cos(theta), sparkRadius * Math.sin(phi) * Math.sin(theta), sparkRadius * Math.cos(phi));
-                }
-                sparkGeo.setAttribute('position', new THREE.Float32BufferAttribute(sparkPos, 3));
-                const sparkMat = new THREE.PointsMaterial({color: 0xffaa00, size: 0.08, transparent: true, opacity: 0.9});
-                sparkSystem = new THREE.Points(sparkGeo, sparkMat); orb.add(sparkSystem);
-
-                moonsGroup = new THREE.Group(); const baseMoonR = finalSize * 0.18;
-                for (let m = 0; m < 10; m++) {
-                    const moonR = baseMoonR * (0.25 + Math.random() * 0.75);
-                    const moonGeo = new THREE.SphereGeometry(moonR, 16, 16);
-                    const greyVal = 64 + Math.floor(Math.random() * 128); 
-                    const moonColor = new THREE.Color(`rgb(${greyVal}, ${greyVal}, ${greyVal})`);
-                    const moonMat = new THREE.MeshStandardMaterial({ color: moonColor, roughness: 0.9, metalness: 0.2 });
-                    const moon = new THREE.Mesh(moonGeo, moonMat);
-                    const angle = (m / 10) * Math.PI * 2; const dist = finalSize * 1.5 + Math.random() * 0.6;
-                    moon.position.set(Math.cos(angle) * dist, (Math.random() - 0.5) * 0.1, Math.sin(angle) * dist);
-                    moonsGroup.add(moon);
-                }
-                orb.add(moonsGroup);
-            }
-            
-            const glowScale = finalSize * 3.5; 
-            const glowSprite = new THREE.Sprite(sharedGlowMaterial); glowSprite.scale.set(glowScale, glowScale, 1); glowSprite.visible = false; orb.add(glowSprite);
-            const selectedGlowSprite = new THREE.Sprite(sharedSelectedGlowMaterial); selectedGlowSprite.scale.set(glowScale, glowScale, 1); selectedGlowSprite.visible = false; orb.add(selectedGlowSprite);
-
-            orb.position.set(d.x, d.y, d.z);
-            orb.userData = { 
-                ...d, radius: Math.sqrt(d.x*d.x + d.z*d.z), angle: Math.atan2(d.z, d.x), orbitSpeed: 0.0004, originalEmissiveHex: mat.emissive.getHex(), originalEmissiveInt: mat.emissiveIntensity,
-                isCenter: isCenter, subMesh: subMesh, sparkSystem: sparkSystem, moonsGroup: moonsGroup, glowRef: glowSprite, selectedGlowRef: selectedGlowSprite 
-            };
-
-            const tex = createTextCanvas(d.label, isCenter);
-            const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true }));
-            sprite.scale.set(10, 5, 1); 
-            // Calculate top of sprite against bottom of sphere for close padding
-            sprite.position.y = -finalSize - 0.8; 
-            orb.add(sprite); orb.userData.spriteRef = sprite;
-
-            scene.add(orb); orbz.push(orb);
-        }
-
-        function renderReels(domainData) {
-            const topReel = document.getElementById('topReel'); const bottomReel = document.getElementById('bottomReel');
-            topReel.innerHTML = ''; bottomReel.innerHTML = '';
-            let topData = []; let bottomData = [];
-
-            if (domainData.top_reel || domainData.bottom_reel) { topData = domainData.top_reel || []; bottomData = domainData.bottom_reel || []; } 
-            else { const nodesArray = domainData.nodes || []; topData = nodesArray.filter(d => d.y >= 0); bottomData = nodesArray.filter(d => d.y < 0); }
-            
-            for (let i = 0; i < 15; i++) {
-                if (i < topData.length) topReel.appendChild(createReelItem(topData[i], true)); else topReel.appendChild(createEmptyReelItem(`CTX_${i + 1}`, true));
-            }
-            for (let i = 0; i < 15; i++) {
-                if (i < bottomData.length) bottomReel.appendChild(createReelItem(bottomData[i], false)); else bottomReel.appendChild(createEmptyReelItem(`CTX_${i + 21}`, false));
-            }
-        }
-
-        function createReelItem(d, isTop) {
-            const item = document.createElement('div'); item.className = 'reel-item';
-            const label = document.createElement('span'); label.className = 'reel-label'; label.innerText = d.label;
-            const btn = document.createElement('div'); btn.className = `spheroid-btn`;
-            
-            let bColor = (d.color && typeof d.color === 'number') ? d.color.toString(16).padStart(6, '0') : '00ffcc';
-            if (d.label === currentTarget) bColor = '00ffcc'; btn.style.borderColor = `#${bColor}`;
-
-            if (d.type === 'image') { btn.style.background = d.bg || '#000'; btn.style.boxShadow = 'inset 0 0 20px rgba(0,0,0,0.8)'; } 
-            else if (d.type === 'metatext') { const textEl = document.createElement('div'); textEl.className = 'mock-metatext'; textEl.innerText = d.content; btn.appendChild(textEl); } 
-            else if (d.type === 'wordz') { const textEl = document.createElement('div'); textEl.className = 'mock-wordz'; textEl.innerText = d.content; btn.appendChild(textEl); }
-            
-            btn.onclick = () => { if (d.type === 'ai') showInfo(d); else showContextInfo(d); };
-            
-            if (isTop) { item.appendChild(label); item.appendChild(btn); } else { item.appendChild(btn); item.appendChild(label); }
-            return item;
-        }
-
-        function createEmptyReelItem(labelText, isTop) {
-            const item = document.createElement('div'); item.className = 'reel-item';
-            const label = document.createElement('span'); label.className = 'reel-label empty-label'; label.innerText = labelText;
-            const btn = document.createElement('div'); btn.className = `spheroid-btn empty-frame`;
-            if (isTop) { item.appendChild(label); item.appendChild(btn); } else { item.appendChild(btn); item.appendChild(label); }
-            return item;
-        }
-
-        function updateNetz() {
-            netzLines.forEach(l => scene.remove(l.mesh)); netzLines = [];
-            const sun = orbz.find(o => o.userData.isCenter) || orbz[0]; if(!sun) return;
-            orbz.forEach(orb => {
-                if(orb === sun) return;
-                const geo = new THREE.CylinderGeometry(0.03, 0.03, 1, 6);
-                const mat = new THREE.MeshBasicMaterial({ color: 0x00ffcc, transparent: true, opacity: 0.15 });
-                const mesh = new THREE.Mesh(geo, mat); scene.add(mesh); netzLines.push({ mesh, p1: sun, p2: orb });
+        function populateLegend() {
+            const legendContainer = document.getElementById('legend-content');
+            GALLERY_DATA.forEach(d => {
+                const isGem = d.type.startsWith('META_');
+                const item = document.createElement('div');
+                item.className = `flex items-center gap-3 p-2 rounded cursor-pointer hover:bg-white/5 transition-all border border-transparent hover:border-[${isGem ? '#ff00ff' : '#00ffcc'}]/30`;
+                item.innerHTML = `
+                    <div class="w-3 h-3 shrink-0 ${isGem ? 'rotate-45' : 'rounded-sm'}" style="background: #${d.color.toString(16).padStart(6, '0')}; box-shadow: 0 0 10px #${d.color.toString(16).padStart(6, '0')};"></div>
+                    <div class="flex flex-col">
+                        <span class="text-[10px] font-bold tracking-wider" style="color: #${isGem ? 'ff00ff' : d.color.toString(16).padStart(6, '0')}">${d.type}</span>
+                        <span class="text-[8px] opacity-70">${d.desc}</span>
+                    </div>
+                `;
+                item.onclick = () => {
+                    const target = orbGroup.find(o => o.label === d.label);
+                    if(target) {
+                        controls.autoRotate = false;
+                        camera.position.set(target.x + 25, target.y + 15, target.z + 35);
+                        controls.target.set(target.x, target.y, target.z);
+                        addLog(`Focused on Topology: ${d.type} [${d.label}]`, 'info');
+                    }
+                };
+                legendContainer.appendChild(item);
             });
         }
 
-        function onPointerUp(e) {
-            if(isPaused) return; 
-            if(e.target.classList.contains('nav-arrow')) return;
-            mouse.x = (e.clientX / window.innerWidth) * 2 - 1; mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
-            raycaster.setFromCamera(mouse, camera);
-            const hits = raycaster.intersectObjects([...orbz, ...interactableCones], true);
-            if (hits.length > 0) {
-                let obj = hits[0].object;
-                while(obj && !obj.userData.label && !obj.userData.isCone && obj.parent) {
-                    if(obj.type === "Sprite" || obj.type === "Points") obj = obj.parent; else obj = obj.parent;
-                }
-                
-                if(obj && obj.userData.isCone) {
-                    const id = obj.userData.axisId;
-                    if (id === 'X_LEFT') { currentGalleryIndex = (currentGalleryIndex - 1 + 3) % 3; applyGalleryToOrbs(galleryKeys[currentGalleryIndex], currentTarget); return; } 
-                    else if (id === 'X_RIGHT') { currentGalleryIndex = (currentGalleryIndex + 1) % 3; applyGalleryToOrbs(galleryKeys[currentGalleryIndex], currentTarget); return; }
-
-                    isSwooping = true;
-                    if (currentViewId === id) { swoopTargetPos.set(20, 20, 45); currentViewId = 'HOME'; } 
-                    else {
-                        if(id === 'Y_TOP') swoopTargetPos.set(0, 25, 0.1); else if(id === 'Y_BOTTOM') swoopTargetPos.set(0, -25, 0.1);
-                        else if(id === 'Z_FRONT') swoopTargetPos.set(0, 0, 50); else if(id === 'Z_BACK') swoopTargetPos.set(0, 0, -50);
-                        else if(id === 'X_LEFT') swoopTargetPos.set(-50, 0, 0.1); else if(id === 'X_RIGHT') swoopTargetPos.set(50, 0, 0.1);
-                        currentViewId = id;
-                    }
-                }
-                else if(obj && obj.userData.label) { showInfo(obj.userData); }
-            }
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
         }
-
-        function onPointerMove(e) {
-            if(isPaused) return;
-
-            mouse.x = (e.clientX / window.innerWidth) * 2 - 1; mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
-            raycaster.setFromCamera(mouse, camera);
-            const hits = raycaster.intersectObjects([...orbz, ...interactableCones], true);
-            
-            if (hits.length > 0) {
-                let obj = hits[0].object;
-                while(obj && !obj.userData.label && !obj.userData.isCone && obj.parent) {
-                    if(obj.type === "Sprite" || obj.type === "Points") obj = obj.parent; else obj = obj.parent;
-                }
-
-                if (hoveredObj !== obj && obj && (obj.userData.label || obj.userData.isCone)) {
-                    if (hoveredObj) {
-                        if (hoveredObj.userData.glowRef) hoveredObj.userData.glowRef.visible = false;
-                        if (hoveredObj.userData.isCone && hoveredObj.material) { hoveredObj.material.emissive.setHex(hoveredObj.userData.originalEmissiveHex); hoveredObj.material.emissiveIntensity = hoveredObj.userData.originalEmissiveInt; }
-                    }
-                    hoveredObj = obj;
-                    if (hoveredObj.userData.glowRef) hoveredObj.userData.glowRef.visible = true;
-                    if (hoveredObj.userData.isCone && hoveredObj.material) hoveredObj.material.emissiveIntensity = 4.0;
-                    document.body.style.cursor = 'pointer';
-                }
-            } else {
-                if (hoveredObj) {
-                    if (hoveredObj.userData.glowRef) hoveredObj.userData.glowRef.visible = false;
-                    if (hoveredObj.userData.isCone && hoveredObj.material) { hoveredObj.material.emissive.setHex(hoveredObj.userData.originalEmissiveHex); hoveredObj.material.emissiveIntensity = hoveredObj.userData.originalEmissiveInt; }
-                }
-                hoveredObj = null; document.body.style.cursor = 'auto';
-            }
-        }
-
-        function showInfo(d) {
-            document.getElementById('DETAILS_PANEL').classList.remove('hidden');
-            document.getElementById('toggleDetailsBtn').classList.add('hidden');
-            
-            document.getElementById('infoTitle').innerText = d.label;
-            document.getElementById('infoContent').innerText = d.content || "VISUAL_DATA_STREAM";
-            document.getElementById('infoMetaType').innerText = d.type ? d.type.toUpperCase() : "AI";
-            document.getElementById('infoMetaAcc').innerText = d.y >= 0 ? "CORE" : "SPECULATIVE";
-            document.getElementById('infoMetaSignal').innerText = d.signal || "METASTATE";
-            document.getElementById('infoMetaTime').innerText = d.z >= 0 ? "FUTURE_NOW" : "HISTORICAL";
-            
-            const siblings = orbz.filter(o => o.userData.label !== d.label).map(o => o.userData.label).slice(0, 10);
-            const detailsStr = siblings.length > 0 ? "RELATED_VECTORZ:\n" + siblings.join(', ') : "Awaiting dimensional data...";
-            document.getElementById('infoDetails').value = detailsStr;
-
-            const btn = document.getElementById('setTargetBtn'); 
-            btn.innerText = "conceptualize";
-            btn.onclick = () => { 
-                document.getElementById('addTopic').value = d.label;
-                exactify();
-                closeInfo(); 
-            };
-
-            const targetOrb = orbz.find(o => o.userData.label === d.label);
-            if (selectedObj && selectedObj.userData.selectedGlowRef) selectedObj.userData.selectedGlowRef.visible = false;
-            selectedObj = targetOrb;
-            if (selectedObj && selectedObj.userData.selectedGlowRef) selectedObj.userData.selectedGlowRef.visible = true;
-        }
-
-        function showContextInfo(d) {
-            document.getElementById('DETAILS_PANEL').classList.remove('hidden');
-            document.getElementById('toggleDetailsBtn').classList.add('hidden');
-            
-            document.getElementById('infoTitle').innerText = d.label;
-            document.getElementById('infoContent').innerText = "VISUAL_DATA_STREAM";
-            document.getElementById('infoMetaType').innerText = d.type.toUpperCase();
-            document.getElementById('infoMetaAcc').innerText = "CONTEXT";
-            document.getElementById('infoMetaSignal').innerText = "METASTATE";
-            document.getElementById('infoMetaTime').innerText = "CURRENT";
-            
-            const btn = document.getElementById('setTargetBtn'); btn.innerText = "INJECT CONTEXT TO CORE";
-            btn.onclick = () => { closeInfo(); };
-
-            if (selectedObj && selectedObj.userData.selectedGlowRef) selectedObj.userData.selectedGlowRef.visible = false;
-            selectedObj = null;
-        }
-
-        function closeInfo() { 
-            document.getElementById('DETAILS_PANEL').classList.add('hidden'); 
-            document.getElementById('toggleDetailsBtn').classList.remove('hidden');
-            if (selectedObj && selectedObj.userData.selectedGlowRef) selectedObj.userData.selectedGlowRef.visible = false;
-            selectedObj = null;
-        }
-
-        function onWindowResize() { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); }
 
         function animate() {
             requestAnimationFrame(animate);
-            if(isSwooping && !isPaused) {
-                camera.position.lerp(swoopTargetPos, 0.05); camera.lookAt(0,0,0);
-                if(camera.position.distanceTo(swoopTargetPos) < 0.2) isSwooping = false;
-            }
-            controls.update();
+            const time = performance.now() * 0.001;
 
-            if (!isPaused) {
-                orbz.forEach((orb, i) => {
-                    if(!orb.userData.isCenter) {
-                        orb.userData.angle += orb.userData.orbitSpeed;
-                        orb.position.x = orb.userData.radius * Math.cos(orb.userData.angle);
-                        orb.position.z = orb.userData.radius * Math.sin(orb.userData.angle);
-                    } else {
-                        if(orb.userData.sparkSystem) { orb.userData.sparkSystem.rotation.y += 0.005; orb.userData.sparkSystem.rotation.x += 0.002; }
-                        if(orb.userData.moonsGroup) { orb.userData.moonsGroup.rotation.y += 0.001; }
-                    }
-
-                    if(orb.userData.subMesh && (orb.userData.texMode === 'cluster_core' || orb.userData.texMode === 'foggy')) {
-                        orb.userData.subMesh.rotation.y -= 0.01; orb.userData.subMesh.rotation.z -= 0.005; orb.userData.subMesh.rotation.x += 0.002; 
-                    }
-
-                    const s = 1.0 + Math.sin(Date.now() * 0.001 + i) * 0.01; orb.scale.set(s,s,s);
-                });
+            orbGroup.forEach((orbObj, idx) => {
+                const ad = orbObj.animData;
                 
-                netzLines.forEach(l => {
-                    const p1 = l.p1.position, p2 = l.p2.position;
-                    const r1 = l.p1.userData.isCenter ? l.p1.userData.size * 1.4 : l.p1.userData.size;
-                    const r2 = l.p2.userData.size;
-                    const dir = new THREE.Vector3().subVectors(p2, p1); const fullDist = dir.length(); const truncatedDist = Math.max(0, fullDist - r1 - r2);
-                    if (fullDist > r1 + r2) {
-                        l.mesh.visible = true; l.mesh.scale.y = truncatedDist;
-                        const startPos = p1.clone().add(dir.clone().normalize().multiplyScalar(r1)); const endPos = p2.clone().sub(dir.clone().normalize().multiplyScalar(r2));
-                        l.mesh.position.copy(startPos).lerp(endPos, 0.5); l.mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0), dir.normalize());
-                    } else { l.mesh.visible = false; }
-                });
-            }
+                // Float effect for entire group
+                orbObj.group.position.y = orbObj.y + Math.sin(time + idx) * 2;
+
+                if (ad.type === 'NEBULA' && ad.shader) {
+                    ad.shader.uniforms.time.value = time;
+                    ad.mesh.rotation.y += 0.002;
+                } else if (ad.type === 'SPARK_NEBULA') {
+                    ad.mesh.rotation.x += 0.001;
+                    ad.mesh.rotation.y += 0.003;
+                } else if (ad.type === 'GLASS_NUCLEUS') {
+                    ad.mesh.rotation.y += 0.005;
+                    ad.mesh.rotation.z += 0.002;
+                    ad.subMeshes.forEach((sub, sIdx) => {
+                        sub.position.y += Math.sin(time * 2 + sIdx) * 0.02;
+                    });
+                } else if (ad.type === 'WIRED_CORE') {
+                    ad.mesh.rotation.x -= 0.005;
+                    ad.mesh.rotation.y -= 0.005;
+                    ad.subMeshes[0].rotation.y += 0.01;
+                } else if (ad.type.startsWith('META_')) { // The GEMZ
+                    ad.mesh.rotation.x += 0.004;
+                    ad.mesh.rotation.y += 0.006;
+                    ad.mesh.rotation.z += 0.002;
+                }
+            });
+
+            // Status Bar Update
+            document.getElementById('coord-display').innerText = 
+                `X:${camera.position.x.toFixed(1)} Y:${camera.position.y.toFixed(1)} Z:${camera.position.z.toFixed(1)}`;
+
+            controls.update();
             renderer.render(scene, camera);
         }
-        
-        window.onload = initApp;
+
+        // --- UI INTERACTIONS ---
+
+        const eyeBtn = document.getElementById('toggle-ui-elements');
+        const legendToggleBtn = document.getElementById('legend-toggle-btn');
+        const spectroLegend = document.getElementById('spectroLegend');
+        const outputPanel = document.getElementById('outputPanel');
+        const logFeed = document.getElementById('log-feed');
+        const promptInput = document.getElementById('prompt-input');
+
+        eyeBtn.onclick = () => {
+            const isHidden = legendToggleBtn.classList.contains('opacity-0');
+            if(isHidden) {
+                legendToggleBtn.classList.remove('opacity-0', 'translate-y-4');
+            } else {
+                legendToggleBtn.classList.add('opacity-0', 'translate-y-4');
+            }
+        };
+
+        legendToggleBtn.onclick = () => {
+            spectroLegend.classList.toggle('hidden-panel');
+        };
+
+        function toggleOutputPanel() {
+            outputPanel.classList.toggle('hidden-bottom');
+        }
+
+        function addLog(msg, type = 'info') {
+            const div = document.createElement('div');
+            div.className = 'data-node border-l-2';
+            const timestamp = new Date().toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            
+            let colorClass = 'text-emerald-300';
+            if(type === 'reflection') colorClass = 'text-yellow-400 font-bold';
+            if(type === 'metastate') colorClass = 'text-[#ff00ff] font-bold';
+
+            div.innerHTML = `<span class="opacity-40">[${timestamp}]</span> <span class="${colorClass}">${msg}</span>`;
+            logFeed.prepend(div);
+            if (logFeed.children.length > 30) logFeed.lastChild.remove();
+        }
+
+        function reflectInput() {
+            const val = promptInput.value.trim();
+            if (!val) return;
+            
+            // Randomly map input wordz to a manifold type for experimentation
+            const randomManifold = GALLERY_DATA[Math.floor(Math.random() * GALLERY_DATA.length)];
+            const isMeta = randomManifold.type.startsWith('META_');
+            
+            addLog(`> INJECTED: [${val}]`, 'info');
+            
+            if(isMeta) {
+                addLog(`>> ABSTRACT CONCEPT CONNECTION ESTABLISHED -> Rendered in Metacognitive space as ${randomManifold.type}`, 'metastate');
+            } else {
+                addLog(`>> REFLECTION MAPPED -> Semantic Topology matched to ${randomManifold.type}`, 'reflection');
+            }
+            
+            // Force output panel open to show result
+            outputPanel.classList.remove('hidden-bottom');
+            
+            // Auto focus camera on matched manifold
+            controls.autoRotate = false;
+            camera.position.set(randomManifold.x + 20, randomManifold.y + 15, randomManifold.z + 30);
+            controls.target.set(randomManifold.x, randomManifold.y, randomManifold.z);
+
+            promptInput.value = '';
+        }
+
+        promptInput.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') reflectInput();
+        });
+
+        window.onload = () => {
+            initGallery();
+            addLog("[SYS] Semantic Topology Gallery Online.");
+            addLog("[SYS] Metacognitive GEMZ Layer Initialized.");
+            addLog("[SYS] Awaiting abstract concepts to map to GEMZ or MANIFOLDZ.");
+        };
+
     </script>
 </body>
 </html>
