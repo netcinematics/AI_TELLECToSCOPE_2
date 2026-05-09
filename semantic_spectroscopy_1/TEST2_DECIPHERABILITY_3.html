@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TEST_2 | Ideogram Decipherability</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { margin: 0; background: #000b0b; color: #00ffcc; font-family: 'Courier New', Courier, monospace; overflow: hidden; }
+        #canvas-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+        .ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; pointer-events: none; }
+        
+        .interactzone { pointer-events: auto; background: rgba(0, 15, 20, 0.85); border: 1px solid rgba(0, 255, 204, 0.3); backdrop-filter: blur(12px); border-radius: 8px; }
+        
+        .spectro-scrollbar::-webkit-scrollbar { width: 6px; }
+        .spectro-scrollbar::-webkit-scrollbar-track { background: rgba(0, 40, 40, 0.5); }
+        .spectro-scrollbar::-webkit-scrollbar-thumb { background: #ff00ff; border-radius: 3px; }
+
+        #overlay-vignette {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle, transparent 50%, rgba(0,0,0,0.9) 100%);
+            pointer-events: none; z-index: 2;
+        }
+
+        .terminal-header { font-size: 0.7rem; letter-spacing: 2px; color: rgba(0, 255, 204, 0.5); border-bottom: 1px solid rgba(0, 255, 204, 0.2); margin-bottom: 8px; padding-bottom: 4px; }
+        .hidden-panel { opacity: 0; pointer-events: none; transform: translate(-20px, -50%); }
+        .output-panel { transform: translate(-50%, 0); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s; }
+        .output-panel.hidden-bottom { transform: translate(-50%, 120%); opacity: 0; pointer-events: none; }
+
+        .data-node { border-left: 2px solid transparent; padding-left: 12px; margin-bottom: 6px; padding-top: 4px; padding-bottom: 4px; transition: all 0.2s; }
+        .data-node:hover { border-left: 2px solid #00ffcc; background: rgba(0,255,204,0.1); }
+        
+        select option { background: #001111; color: #00ffcc; }
+
+        /* LLM Loading Overlay Styles */
+        #loadingOverlay {
+            position: absolute; inset: 0; 
+            background: rgba(5, 5, 5, 0.8); 
+            backdrop-filter: blur(10px);
+            z-index: 100; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            color: #00ffcc; font-family: 'Courier New', Courier, monospace; pointer-events: auto;
+        }
+        .spinner {
+            width: 60px; height: 60px;
+            border: 6px solid rgba(218, 112, 214, 0.4);
+            border-top: 6px solid #00ffcc;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+            box-shadow: 0 0 15px rgba(0, 255, 204, 0.5);
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .loading-text { font-size: 1.2rem; font-weight: bold; letter-spacing: 2px; text-shadow: 0 0 10px #00ffcc; animation: pulse 1.5s infinite; text-transform: uppercase; transition: color 0.3s, text-shadow 0.3s; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+        /* Details Panel */
+        #DETAILS_PANEL { position: absolute; top: 220px; right: 24px; width: 300px; z-index: 60; border-top: 2px solid #ff00ff; transition: opacity 0.3s, transform 0.3s; }
+        #DETAILS_PANEL.hidden-right { opacity: 0; pointer-events: none; transform: translateX(50px); }
+
+        .glow-text { text-shadow: 0 0 12px rgba(255, 0, 255, 0.8); }
+    </style>
+</head>
+<body>
+
+    <script>
+        // ==========================================
+        // SHADER_LIB: Preserved Baseline Shaders
+        // ==========================================
+        const SHADER_LIB = {
+            NebulaShader: {
+                uniforms: { time: { value: 0.0 }, baseColor: { value: new THREE.Color(0xaa00ff) }, nebulaColor: { value: new THREE.Color(0x00ccff) } },
+                vertexShader: `varying vec2 vUv; varying vec3 vPosition; varying vec3 vNormal; void main() { vUv = uv; vPosition = position; vNormal = normalize(normalMatrix * normal); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+                fragmentShader: `
+                    uniform float time; uniform vec3 baseColor; uniform vec3 nebulaColor;
+                    varying vec2 vUv; varying vec3 vPosition; varying vec3 vNormal;
+                    vec3 mod289(vec3 x){return x - floor(x * (1.0 / 289.0)) * 289.0;}
+                    vec4 mod289(vec4 x){return x - floor(x * (1.0 / 289.0)) * 289.0;}
+                    vec4 permute(vec4 x){return mod289(((x*34.0)+1.0)*x);}
+                    vec4 taylorInvSqrt(vec4 r){return 1.79284291400159 - 0.85373472095314 * r;}
+                    float snoise(vec3 v) {
+                        const vec2 C = vec2(1.0/6.0, 1.0/3.0); const vec4 D = vec4(0.0, 0.5, 1.0, 2.0);
+                        vec3 i = floor(v + dot(v, C.yyy)); vec3 x0 = v - i + dot(i, C.xxx);
+                        vec3 g = step(x0.yzx, x0.xyz); vec3 l = 1.0 - g;
+                        vec3 i1 = min(g.xyz, l.zxy); vec3 i2 = max(g.xyz, l.zxy);
+                        vec3 x1 = x0 - i1 + C.xxx; vec3 x2 = x0 - i2 + C.yyy; vec3 x3 = x0 - D.yyy;
+                        i = mod289(i); vec4 p = permute(permute(permute(i.z + vec4(0.0, i1.z, i2.z, 1.0)) + i.y + vec4(0.0, i1.y, i2.y, 1.0)) + i.x + vec4(0.0, i1.x, i2.x, 1.0));
+                        float n_ = 0.142857142857; vec3 ns = n_ * D.wyz - p.xzw;
+                        vec4 j = p - 49.0 * floor(p * ns.z * ns.z); vec4 x_ = floor(j * ns.z); vec4 y_ = floor(j - 7.0 * x_);
+                        vec4 x = x_ *ns.x + ns.yyyy; vec4 y = y_ *ns.x + ns.yyyy; vec4 h = 1.0 - abs(x) - abs(y);
+                        vec4 b0 = vec4(x.xy, y.xy); vec4 b1 = vec4(x.zw, y.zw); vec4 s0 = floor(b0)*2.0 + 1.0; vec4 s1 = floor(b1)*2.0 + 1.0;
+                        vec4 sh = -step(h, vec4(0.0)); vec4 a0 = b0.xzyw + s0.xzyw*sh.xxyy; vec4 a1 = b1.xzyw + s1.xzyw*sh.zzww;
+                        vec3 p0 = vec3(a0.xy,h.x); vec3 p1 = vec3(a0.zw,h.y); vec3 p2 = vec3(a1.xy,h.z); vec3 p3 = vec3(a1.zw,h.w);
+                        vec4 norm = taylorInvSqrt(vec4(dot(p0,p0), dot(p1,p1), dot(p2, p2), dot(p3,p3)));
+                        p0 *= norm.x; p1 *= norm.y; p2 *= norm.z; p3 *= norm.w;
+                        vec4 m = max(0.6 - vec4(dot(x0,x0), dot(x1,x1), dot(x2,x2), dot(x3,x3)), 0.0); m = m * m;
+                        return 42.0 * dot(m*m, vec4(dot(p0,x0), dot(p1,x1), dot(p2,x2), dot(p3,x3)));
+                    }
+                    float fbm(vec3 p) { float v = 0.0; float a = 0.5; vec3 shift = vec3(100.0); for (int i = 0; i < 4; i++) { v += a * snoise(p); p = p * 2.0 + shift; a *= 0.5; } return v; }
+                    void main() {
+                        float fresnel = pow(1.0 - dot(vNormal, vec3(0.0, 0.0, 1.0)), 3.0);
+                        vec3 noisePos = vPosition * 2.5 + vec3(0.0, 0.0, time * 0.2); float n = fbm(noisePos); float cloud = smoothstep(-0.2, 0.6, n);
+                        vec3 color = mix(baseColor, nebulaColor, n * 0.5 + 0.5); float alpha = cloud * (1.0 - fresnel);
+                        gl_FragColor = vec4(color, alpha * 0.8);
+                    }
+                `
+            }
+        };
+    </script>
+
+    <!-- LLM Lifecycle Loader (Moved bypass button inside overlay) -->
+    <div id="loadingOverlay">
+        <button id="loadingCloseBtn" onclick="forceCloseLoading()" class="absolute top-4 right-6 text-red-500 hover:text-white font-bold text-3xl transition-colors z-[105] pointer-events-auto" title="Bypass Loading">✕</button>
+        <div class="spinner"></div>
+        <div class="loading-text" id="loadingOverlayText">loading LLM...</div>
+        <div id="loadingTimer" class="mt-4 text-emerald-400 font-mono text-lg font-bold text-center">0.0s<br><span class="text-xs text-[#00ffcc] mt-2 block">Loading Local Brains (WebGPU)...</span></div>
+    </div>
+
+    <div id="canvas-container"></div>
+    <div id="overlay-vignette"></div>
+
+    <div style="user-select: none;" class="ui-layer">
+        
+        <div class="absolute top-6 z-[60] right-6 interactzone px-4 py-2 flex items-center gap-2">
+            <div id="llmStatusDot" class="w-2 h-2 rounded-full bg-red-500"></div>
+            <span id="llmStatus" class="text-[10px] font-bold tracking-[0.2em] text-red-500 uppercase">LLM LOADING</span>
+        </div>
+
+        <div class="absolute top-[80px] right-6 flex flex-col items-end gap-[0.8em] z-[60] pointer-events-none">
+            <button id="lite-toggle-btn" class="interactzone px-4 py-2 text-[10px] font-bold tracking-widest border-r-4 border-[#00ffcc] text-[#00ffcc] hover:bg-[steelblue] hover:text-black transition-all rounded-lg pointer-events-auto shadow-lg">
+                LITE: OFF
+            </button>
+            <button id="legend-toggle-btn" class="interactzone px-4 py-2 text-[10px] font-bold tracking-widest border-r-4 border-[#ff00ff] text-[#ff00ff] hover:bg-[#ff00ff] hover:text-black transition-all duration-300 rounded-lg pointer-events-auto shadow-lg">
+                LEGEND
+            </button>
+            <button id="details-toggle-btn" onclick="toggleDetails()" class="interactzone px-4 py-2 text-[10px] font-bold tracking-widest border-r-4 border-yellow-400 text-yellow-400 hover:bg-yellow-400 hover:text-black transition-all duration-300 rounded-lg pointer-events-auto shadow-lg mt-2">
+                DETAILS
+            </button>
+        </div>
+
+        <button id="project-toggle-btn" onclick="toggleTitleBar()" class="absolute top-6 left-6 interactzone px-4 py-2 text-[10px] font-bold tracking-widest border-l-4 border-[#ff00ff] text-[#ff00ff] hover:bg-[#ff00ff] hover:text-black transition-all duration-300 rounded-lg pointer-events-auto shadow-lg opacity-0 pointer-events-none -translate-x-10 z-50">
+            PROJECT
+        </button>
+
+        <div id="title-bar-panel" class="w-[77%] md:w-[50%] absolute top-6 left-6 interactzone p-4 flex flex-col gap-1 border-l-4 border-[#ff00ff] transition-all duration-300 z-50">
+            <button onclick="toggleTitleBar()" class="absolute top-3 right-4 text-[#00ffcc] hover:text-white font-bold text-xl pointer-events-auto transition-colors">✕</button>
+            <h1 class="text-2xl md:text-3xl font-bold uppercase tracking-widest text-emerald pr-6">TEST_2: "IDEOGRAM DECIPHERABILITY"</h1>
+            <div class="flex gap-6 mt-6">
+                <ol class="text-[14px] gap-6 text-[#ff00ff]">
+                    <li>1) SELECT ANCIENT_GREEK_IDEOGRAM</li>
+                    <li>2) ANALYZE META_CONTEXT & POLYSEMY</li>
+                    <li>3) TRIGGER METASTATE BENCHMARK PROMPT</li>
+                </ol>
+            </div>
+            
+            <div class="mt-2 flex items-center gap-2 w-full">
+                <select id="domain-select" class="bg-black/80 border border-[#00ffcc]/50 p-2 text-sm md:text-base font-bold w-full outline-none focus:border-[#ff00ff] text-[#00ffcc] pointer-events-auto rounded transition-colors uppercase tracking-widest" onchange="triggerIdeogramTest(this.value)">
+                    <option value="" disabled selected>-- SELECT IDEOGRAM FOR ANALYSIS --</option>
+                    <option value="ALPHA">1. ALPHA (α)</option>
+                    <option value="BETA">2. BETA (β)</option>
+                    <option value="DELTA">3. DELTA (δ)</option>
+                    <option value="SIGMA">4. SIGMA (σ)</option>
+                    <option value="OMEGA">5. OMEGA (ω)</option>
+                </select>
+            </div>
+        </div>
+
+        <div id="spectroLegend" class="absolute left-6 top-[280px] z-[60] interactzone p-4 shadow-2xl flex flex-col gap-4 w-[320px] max-h-[50vh] overflow-y-auto spectro-scrollbar pointer-events-auto transition-all duration-300 hidden-panel">
+            <div class="terminal-header flex justify-between items-center">
+                <span id="legend-title">MANIFOLD_LEGEND</span>
+            </div>
+            <div id="legend-content" class="flex flex-col gap-2"></div>
+        </div>
+
+        <div id="DETAILS_PANEL" class="hidden-right interactzone p-4 shadow-2xl pointer-events-auto flex flex-col gap-2">
+            <div class="flex justify-between items-start mb-2 border-b border-[#ff00ff]/30 pb-2">
+                <h3 id="infoTitle" class="text-[#ff00ff] font-black uppercase text-lg tracking-widest glow-text">NODE</h3>
+                <button onclick="closeDetails()" class="text-[#00ffcc] hover:text-white text-lg">✕</button>
+            </div>
+            <p id="infoContent" class="text-sm text-[#00ffcc] leading-relaxed font-mono italic mb-2"></p>
+            <div class="grid grid-cols-1 gap-1 text-xs border-t border-[#00ffcc]/30 pt-2 font-mono">
+                <div class="flex justify-between"><span class="text-emerald-700">VECTOR:</span> <span id="infoMetaType" class="text-[#ff00ff] font-bold uppercase"></span></div>
+                <div class="flex justify-between"><span class="text-emerald-700">CONTEXT:</span> <span id="infoMetaParent" class="text-yellow-400 font-bold uppercase"></span></div>
+                <div class="flex justify-between"><span class="text-emerald-700">COORD:</span> <span id="infoMetaCoords" class="text-[#00ffcc] font-bold"></span></div>
+            </div>
+            <button id="conceptualizeBtn" class="mt-4 w-full border border-[#ff00ff] hover:bg-[#ff00ff] hover:text-black bg-black/50 py-2 text-xs text-[#ff00ff] transition-all uppercase font-black tracking-widest rounded shadow-[0_0_10px_rgba(255,0,255,0.2)]">CONCEPTUALIZE</button>
+        </div>
+
+        <div id="outputPanel" class="output-panel hidden-bottom absolute bottom-24 left-1/2 w-[90%] md:w-[80%] max-w-5xl h-[40vh] interactzone flex flex-col shadow-2xl z-50 pointer-events-auto border-t-2 border-[#ff00ff]" style="transition: height 0.3s ease, transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s;">
+            <div style="flex-wrap:wrap;" class="flex justify-between items-center p-3 border-b border-[#00ffcc]/30 bg-black/60 shrink-0">
+                <div class="flex items-center gap-3">
+                    <span class="text-[12px] text-[#ff00ff] mb-4 font-black tracking-widest uppercase">METACOGNITIVE_LLM_STREAM</span>
+                </div>
+                <div style="flex-wrap:wrap;" class="flex items-center gap-2">
+                    <button onclick="showViewz()" class="text-[#00ffcc] hover:text-white border border-[#00ffcc]/50 hover:bg-[#00ffcc]/20 px-2 py-0.5 text-[16px] font-bold tracking-widest uppercase rounded transition-colors">VIEWZ</button>
+                    <button onclick="showLogz()" class="text-[#ff00ff] hover:text-white border border-[#ff00ff]/50 hover:bg-[#ff00ff]/20 px-2 py-0.5 text-[16px] font-bold tracking-widest uppercase rounded transition-colors">LOGZ</button>
+                    <button onclick="toggleOutputMinMax()" class="text-yellow-400 hover:text-white border border-yellow-400/50 hover:bg-yellow-400/20 px-2 py-0.5 text-[14px] font-bold tracking-widest uppercase rounded transition-colors">MIN/MAX</button>
+                    <button onclick="stopInference()" class="text-red-500 hover:text-red-400 border border-red-500/50 hover:bg-red-500/20 px-2 py-0.5 text-[14px] font-bold tracking-widest uppercase rounded transition-colors">STOP</button>
+                    <button onclick="toggleOutputPanel()" class="text-[#00ffcc] hover:text-white font-bold px-2 text-lg">✕</button>
+                </div>
+            </div>
+            
+            <div id="log-feed" class="p-6 flex-grow overflow-y-auto spectro-scrollbar text-sm text-emerald-100 font-mono leading-relaxed flex flex-col gap-3">
+                <div class="opacity-50">[SYS] Awaiting metacognitive domain selection...</div>
+            </div>
+            
+            <div id="experiment-viewz" class="hidden p-6 flex-grow overflow-y-auto spectro-scrollbar text-sm text-[#00ffcc] font-mono leading-relaxed flex-col gap-3">
+                <!-- Data injected via JS -->
+            </div>
+        </div>
+
+        <div class="absolute bottom-6 left-6 flex items-end gap-4 pointer-events-none z-40">
+            <div class="interactzone px-4 py-2 flex items-center gap-6 pointer-events-auto rounded-full border border-[#ff00ff]/50 hover:bg-[#ff00ff]/20 transition-colors">
+                <button onclick="toggleOutputPanel()" class="text-[12px] font-bold tracking-widest text-[#ff00ff] hover:text-white">📝 LOGZ (CONSOLE)</button>
+            </div>
+        </div>
+        
+        <div class="absolute bottom-6 right-6 opacity-40 text-[9px] md:text-xs tracking-[0.4em] pointer-events-none uppercase border-b border-[#00ffcc]/30 pb-1">
+            TO aSEEKa, aSPARKa IN aDARKa
+        </div>
+    </div>
+
+    <script>
+        // --- THREE.JS & APP GLOBALS ---
+        let scene, camera, renderer, controls, raycaster, mouse;
+        let orbGroup = [];
+        let netzLines = [];
+        let lineLabels = [];
+        let sharedGlowTex;
+        
+        let isLiteMode = false;
+        let hoveredObj = null;
+        let selectedObj = null;
+        
+        // --- LLM LIFECYCLE GLOBALS ---
+        let isInferencing = false;
+        let hasInitializedThreeJS = false;
+        let loadingTimerInterval = null;
+        let loadingStartTime = 0;
+
+        // --- THE NEW ANCIENT GREEK IDEOGRAM TAXONOMY ---
+        const IDEOGRAM_DATA = {
+            "ALPHA": {
+                desc: "The first. The beginning. A primary origin point.",
+                contexts: [
+                    { label: "FINANCE", desc: "Performance relative to a benchmark index.", children: [{label: "EXCESS_RETURN", sub: ["YIELD_DELTA", "RISK_ADJUST"]}, {label: "MARKET_BEAT", sub: ["OUTPERFORM", "ALPHA_CAPTURE"]}] },
+                    { label: "PHYSICS", desc: "Helium nucleus radiation topology.", children: [{label: "ALPHA_PARTICLE", sub: ["HELIUM_ION", "IONIZING"]}, {label: "RADIATION_DECAY", sub: ["HALF_LIFE", "ISOTOPE"]}] },
+                    { label: "SOCIALS", desc: "Hierarchical dominance structures.", children: [{label: "APEX_LEADER", sub: ["DOMINANCE", "HIERARCHY"]}, {label: "DOMINANT_NODE", sub: ["CENTRALITY", "INFLUENCE"]}] },
+                    { label: "SOFTWARE", desc: "Initial, unstable testing phase.", children: [{label: "INTERNAL_BUILD", sub: ["NIGHTLY", "PRE_BETA"]}, {label: "PROTOTYPE", sub: ["WIREFRAME", "MOCKUP"]}] }
+                ]
+            },
+            "BETA": {
+                desc: "The second. Derived from 'beth' (house).",
+                contexts: [
+                    { label: "FINANCE", desc: "Measurement of systematic risk.", children: [{label: "VOLATILITY", sub: ["BETA_COEFF", "SWING"]}, {label: "MARKET_CORRELATION", sub: ["PEGGED", "VARIANCE"]}] },
+                    { label: "PHYSICS", desc: "High-energy, high-speed electrons.", children: [{label: "POSITRON", sub: ["ANTIMATTER", "CHARGE"]}, {label: "BETA_DECAY", sub: ["NEUTRINO", "EMISSION"]}] },
+                    { label: "SOFTWARE", desc: "Secondary testing phase prior to launch.", children: [{label: "PUBLIC_TEST", sub: ["OPEN_BETA", "FEEDBACK"]}, {label: "PRE_RELEASE", sub: ["RC1", "STAGING"]}] },
+                    { label: "ANCIENT_MATH", desc: "Numerical value notation.", children: [{label: "NUMERAL_TWO", sub: ["SECOND", "DUAL"]}, {label: "HOUSE_SYMBOL", sub: ["BETH", "SHELTER"]}] }
+                ]
+            },
+            "DELTA": {
+                desc: "The fourth. The symbol of change and transition.",
+                contexts: [
+                    { label: "MATHEMATICS", desc: "Differential transition state.", children: [{label: "VARIANCE", sub: ["DIFF", "STEP"]}, {label: "GRADIENT_SHIFT", sub: ["SLOPE", "RATE"]}] },
+                    { label: "GEOGRAPHY", desc: "Triangular alluvial landforms.", children: [{label: "RIVER_MOUTH", sub: ["ESTUARY", "ALLUVIAL"]}, {label: "SILT_DEPOSIT", sub: ["SEDIMENT", "FAN"]}] },
+                    { label: "FINANCE", desc: "Rate of change in options pricing.", children: [{label: "HEDGE_RATIO", sub: ["NEUTRAL", "POSITION"]}, {label: "PRICE_SENSITIVITY", sub: ["DERIVATIVE", "OPTION"]}] }
+                ]
+            },
+            "SIGMA": {
+                desc: "The eighteenth. Aggregation and dispersion.",
+                contexts: [
+                    { label: "STATISTICS", desc: "Standard deviation from the mean.", children: [{label: "STAT_VARIANCE", sub: ["CURVE", "DISTRIBUTION"]}, {label: "SIX_SIGMA", sub: ["QUALITY", "DEFECT"]}] },
+                    { label: "MATHEMATICS", desc: "The summation operator.", children: [{label: "TOTALITY", sub: ["AGGREGATE", "LIMIT"]}, {label: "SERIES_SUM", sub: ["CALCULUS", "SEQUENCE"]}] },
+                    { label: "SOCIALS", desc: "Independent, non-hierarchical actors.", children: [{label: "LONE_WOLF", sub: ["ISOLATION", "INDEPENDENCE"]}, {label: "OUTSIDE_SYSTEM", sub: ["FRINGE", "OUTCAST"]}] }
+                ]
+            },
+            "OMEGA": {
+                desc: "The twenty-fourth. The ultimate boundary or conclusion.",
+                contexts: [
+                    { label: "PHYSICS", desc: "Electrical resistance or angular velocity.", children: [{label: "OHM_RESISTANCE", sub: ["IMPEDANCE", "CIRCUIT"]}, {label: "ANGULAR_SPEED", sub: ["RADIAN", "VELOCITY"]}] },
+                    { label: "COSMOLOGY", desc: "Density parameter of the universe.", children: [{label: "UNIVERSE_DENSITY", sub: ["BIG_CRUNCH", "EXPANSION"]}, {label: "CRITICAL_MASS", sub: ["THRESHOLD", "COLLAPSE"]}] },
+                    { label: "PHILOSOPHY", desc: "The end of sequences.", children: [{label: "THE_ULTIMATE", sub: ["ABSOLUTE", "ZENITH"]}, {label: "FINALITY", sub: ["CLOSURE", "TERMINUS"]}] }
+                ]
+            }
+        };
+
+        let ACTIVE_VIEW_DATA = [];
+        let CURRENT_DOMAIN_NAME = "";
+
+        // --- UTILS ---
+        function createGlowTexture(colorStr = '255,255,255') {
+            const canvas = document.createElement('canvas'); canvas.width = 128; canvas.height = 128;
+            const ctx = canvas.getContext('2d');
+            const grad = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
+            grad.addColorStop(0, `rgba(${colorStr},1)`); grad.addColorStop(0.2, `rgba(${colorStr},0.6)`);
+            grad.addColorStop(0.5, `rgba(${colorStr},0.2)`); grad.addColorStop(1, `rgba(${colorStr},0)`);
+            ctx.fillStyle = grad; ctx.fillRect(0, 0, 128, 128); return new THREE.CanvasTexture(canvas);
+        }
+
+        // Updated Label Canvas to color-match the orb and remove backgrounds
+        function updateLabelCanvas(canvas, text, colorHex) {
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const colorString = '#' + colorHex.toString(16).padStart(6, '0');
+            
+            // Add a very subtle drop shadow for legibility against the dark void
+            ctx.shadowColor = 'rgba(255,100,255,0.8)';
+            ctx.shadowBlur = 4;
+            ctx.shadowOffsetX = 2;
+            ctx.shadowOffsetY = 2;
+
+            ctx.fillStyle = colorString;
+            ctx.font = 'bold 36px Courier New';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            let formattedText = text.replace(/_/g, ' ');
+            ctx.fillText(formattedText, canvas.width / 2, canvas.height / 2);
+        }
+
+        function createLabel(text, size, colorHex, yOffset = 0) {
+            const tempCanvas = document.createElement('canvas');
+            const tempCtx = tempCanvas.getContext('2d');
+            tempCtx.font = 'bold 36px Courier New';
+            const textMetrics = tempCtx.measureText(text.replace(/_/g, ' '));
+            let canvasWidth = Math.max(256, Math.ceil(textMetrics.width) + 40);
+
+            const canvas = document.createElement('canvas'); 
+            canvas.width = canvasWidth; 
+            canvas.height = 64; // Tighter height
+            
+            updateLabelCanvas(canvas, text, colorHex);
+            
+            const tex = new THREE.CanvasTexture(canvas);
+            const spriteMat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false });
+            const sprite = new SpriteLabel(spriteMat);
+            
+            sprite.userData = { isLabel: true, text, canvas, tex, colorHex };
+            
+            const aspectRatio = canvasWidth / 64;
+            let s = size * 2.5; 
+            sprite.scale.set(s * aspectRatio * 0.5, s * 0.5, 1); 
+            
+            // Anchor strictly BELOW the orb with alternating offset to prevent overlap
+            sprite.position.y = -size - (s * 0.3) + yOffset; 
+            return sprite;
+        }
+
+        // Use custom class for labeling sprite so it doesn't rotate with billboard if needed
+        class SpriteLabel extends THREE.Sprite {
+            constructor(mat) { super(mat); }
+        }
+
+        function createLineLabel(text, colorHex) {
+            const canvas = document.createElement('canvas'); 
+            const tempCtx = canvas.getContext('2d');
+            tempCtx.font = 'bold 30px Courier New';
+            const textMetrics = tempCtx.measureText(text);
+            
+            canvas.width = Math.max(256, Math.ceil(textMetrics.width) + 40); 
+            canvas.height = 64;
+            
+            const ctx = canvas.getContext('2d');
+            
+            // Larger font for line relationships, just slightly smaller than orb labels
+            ctx.fillStyle = '#' + colorHex.toString(16).padStart(6, '0');
+            ctx.font = 'bold 30px Courier New';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(text, canvas.width / 2, 32);
+
+            const tex = new THREE.CanvasTexture(canvas);
+            const spriteMat = new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false });
+            const sprite = new THREE.Sprite(spriteMat);
+            
+            const aspectRatio = canvas.width / 64;
+            let s = 7.0; // Scaled up significantly
+            sprite.scale.set(s * aspectRatio * 0.5, s * 0.5, 1);
+            
+            return sprite;
+        }
+
+        // --- CORE THREE.JS SETUP ---
+        function initGallery() {
+            scene = new THREE.Scene(); 
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+            
+            // Looking up from -y
+            camera.position.set(0, -120, 1);
+            
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight); renderer.setPixelRatio(window.devicePixelRatio);
+            document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true; controls.dampingFactor = 0.05;
+            controls.autoRotate = false;
+            controls.target.set(0, 5, 0);
+
+            raycaster = new THREE.Raycaster(); mouse = new THREE.Vector2();
+            sharedGlowTex = createGlowTexture('255,255,255');
+
+            const ambient = new THREE.AmbientLight(0xff00ff, 0.3); scene.add(ambient);
+            const spot1 = new THREE.DirectionalLight(0xffff00, 0.8); spot1.position.set(20, 50, 20); scene.add(spot1);
+
+            window.addEventListener('resize', onWindowResize, false);
+            window.addEventListener('dblclick', onDoubleClick, false);
+            window.addEventListener('pointermove', onPointerMove, false);
+            animate();
+            
+            hasInitializedThreeJS = true;
+
+            // Load ALPHA by default
+            triggerIdeogramTest("ALPHA");
+            document.getElementById('domain-select').value = "ALPHA";
+        }
+
+        function clearGallery() {
+            orbGroup.forEach(orb => scene.remove(orb.group)); orbGroup = [];
+            netzLines.forEach(l => scene.remove(l)); netzLines = [];
+            lineLabels.forEach(l => scene.remove(l)); lineLabels = [];
+            selectedObj = null;
+        }
+
+        // --- HANGING TREE TOPOLOGY GENERATOR ---
+        function buildHangingTree(ideoKey) {
+            clearGallery();
+            const data = IDEOGRAM_DATA[ideoKey];
+            if(!data) return;
+
+            document.getElementById('legend-title').innerText = `IDEOGRAM_TOPOLOGY: ${ideoKey}`;
+            ACTIVE_VIEW_DATA = [];
+            
+            const rootColor = 0x87CEEB; // Explicit Sky Blue
+            
+            // 1. Root Node (Top)
+            ACTIVE_VIEW_DATA.push({
+                label: ideoKey, type: 'TARGET_TOKEN', color: rootColor, size: 8,
+                x: 0, y: 35, z: 0, desc: data.desc, relation: "ROOT", parent: null, labelYOffset: 0
+            });
+
+            const ctxCount = data.contexts.length;
+            const y1 = 15;  // Compressed branch height
+            const y2 = -5;  // Compressed branch height
+            const y3 = -25; // Depth for concepts
+            
+            // Absolute radiuses to create perfect concentric clock faces
+            const R1 = 25; 
+            const R2 = 45; 
+            const R3 = 65; 
+
+            // PI/4 offset turns "+" orientation into "X" orientation
+            const angleOffset = Math.PI / 4;
+
+            // 2. Middle Layer (META_CONTEXT)
+            data.contexts.forEach((ctx, i) => {
+                const angle1 = (i / ctxCount) * Math.PI * 2 + angleOffset;
+                const cx = Math.cos(angle1) * R1;
+                const cz = Math.sin(angle1) * R1;
+                
+                // Lightened gradient (0.65 vs previous 0.35)
+                const cColorMid = new THREE.Color().setHSL(i/ctxCount, 1.0, 0.65).getHex();
+
+                ACTIVE_VIEW_DATA.push({
+                    label: ctx.label, type: 'META_CONTEXT', color: cColorMid, size: 5,
+                    x: cx, y: y1, z: cz, desc: ctx.desc, parent: ideoKey, relation: "CONTEXTUAL_BRIDGE",
+                    labelYOffset: (i % 2 === 0) ? 0 : -4
+                });
+
+                // 3. Bottom Layer (Polysemy Nodes)
+                const childCount = ctx.children.length;
+                // Distribute perfectly across the 360 degree space (8 total nodes = Math.PI / 4)
+                const spread2 = Math.PI / 4; 
+                
+                ctx.children.forEach((childObj, j) => {
+                    const angle2 = angle1 + ((j - (childCount-1)/2) * spread2); 
+                    const chx = Math.cos(angle2) * R2;
+                    const chz = Math.sin(angle2) * R2;
+
+                    // Lightened gradient (0.45 vs previous 0.15)
+                    const cColorBot = new THREE.Color().setHSL(i/ctxCount, 1.0, 0.45).getHex();
+                    const globalChildIndex = i * 2 + j;
+
+                    ACTIVE_VIEW_DATA.push({
+                        label: childObj.label, type: 'POLYSEMOUS_NODE', color: cColorBot, size: 3.5,
+                        x: chx, y: y2, z: chz, desc: `Polysemous instance within ${ctx.label}`, parent: ctx.label, relation: "SEMANTIC_DRIFT",
+                        labelYOffset: (globalChildIndex % 2 === 0) ? 0 : -4
+                    });
+                    
+                    // 4. New Deep Concept Layer
+                    const subCount = childObj.sub.length;
+                    // Distribute perfectly across the 360 degree space (16 total nodes = Math.PI / 8)
+                    const spread3 = Math.PI / 8;
+                    
+                    childObj.sub.forEach((subLabel, k) => {
+                        const angle3 = angle2 + ((k - (subCount-1)/2) * spread3);
+                        const sx = Math.cos(angle3) * R3;
+                        const sz = Math.sin(angle3) * R3;
+
+                        // Lightened gradient (0.25 vs previous 0.08)
+                        const cColorDeep = new THREE.Color().setHSL(i/ctxCount, 1.0, 0.25).getHex();
+                        const globalSubIndex = globalChildIndex * 2 + k;
+
+                        ACTIVE_VIEW_DATA.push({
+                            label: subLabel, type: 'DEEP_CONCEPT', color: cColorDeep, size: 2.0,
+                            x: sx, y: y3, z: sz, desc: `Core concept derived from ${childObj.label}`, parent: childObj.label, relation: "GRANULAR_DRIFT",
+                            labelYOffset: (globalSubIndex % 2 === 0) ? 0 : -4
+                        });
+                    });
+                });
+            });
+
+            renderHangingTree();
+        }
+
+        function renderHangingTree() {
+            // Render Orbs
+            ACTIVE_VIEW_DATA.forEach(data => {
+                const group = new THREE.Group(); 
+                group.position.set(data.x, data.y, data.z);
+                
+                // Color sanity check for TARGET_TOKEN
+                let finalColor = data.color;
+                if (data.type === 'TARGET_TOKEN') finalColor = 0x87CEEB;
+
+                const mat = new THREE.MeshStandardMaterial({ 
+                    color: finalColor, emissive: finalColor, emissiveIntensity: 0.5, 
+                    metalness: 0.8, roughness: 0.2, opacity: 1, transparent: true 
+                });
+                const mainMesh = new THREE.Mesh(new THREE.SphereGeometry(data.size, 32, 32), mat);
+                group.add(mainMesh);
+
+                const hitMesh = new THREE.Mesh(new THREE.SphereGeometry(data.size * 1.5, 16, 16), new THREE.MeshBasicMaterial({visible: false}));
+                hitMesh.userData = { isHitbox: true, dataObj: data };
+                group.add(hitMesh);
+
+                // Add below-orb label with dynamic offset passed through
+                group.add(createLabel(data.label, data.size, finalColor, data.labelYOffset));
+
+                scene.add(group); 
+                orbGroup.push({ group, ...data, actualColor: finalColor });
+            });
+
+            // Render Lines
+            ACTIVE_VIEW_DATA.forEach(node => {
+                if(node.parent) {
+                    const parentNode = orbGroup.find(o => o.label === node.parent);
+                    if(parentNode) {
+                        const p1 = new THREE.Vector3(parentNode.x, parentNode.y, parentNode.z);
+                        const p2 = new THREE.Vector3(node.x, node.y, node.z);
+                        
+                        const geo = new THREE.BufferGeometry().setFromPoints([p1, p2]);
+                        const mat = new THREE.LineBasicMaterial({ color: node.color, transparent: true, opacity: 0.4 });
+                        const line = new THREE.Line(geo, mat);
+                        scene.add(line);
+                        netzLines.push(line);
+
+                        const midPoint = p1.clone().lerp(p2, 0.5);
+                        const lineLabel = createLineLabel(node.relation, node.color);
+                        lineLabel.position.copy(midPoint);
+                        lineLabel.position.y -= 1.5; 
+                        scene.add(lineLabel);
+                        lineLabels.push(lineLabel);
+                    }
+                }
+            });
+
+            populateLegend();
+        }
+
+        // --- INTERACTION ---
+        function clearSelection() {
+            if (selectedObj) {
+                const mesh = selectedObj.group.children[0];
+                if(mesh && mesh.material) mesh.material.emissiveIntensity = 1.5;
+                selectedObj = null;
+            }
+        }
+
+        function onPointerMove(e) {
+            mouse.x = (e.clientX / window.innerWidth) * 2 - 1; mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+            raycaster.setFromCamera(mouse, camera);
+            const hitboxes = orbGroup.map(o => o.group.children.find(c => c.userData.isHitbox)).filter(Boolean);
+            const hits = raycaster.intersectObjects(hitboxes);
+            
+            if(hits.length > 0) {
+                document.body.style.cursor = 'pointer';
+                const obj = hits[0].object;
+                if(hoveredObj !== obj) { hoveredObj = obj; }
+            } else {
+                document.body.style.cursor = 'auto'; hoveredObj = null;
+            }
+        }
+
+        function onDoubleClick(e) {
+            if(e.target.closest('.ui-layer')) return; 
+            if(hoveredObj) {
+                clearSelection();
+                selectedObj = orbGroup.find(o => o.group === hoveredObj.parent);
+                
+                if (selectedObj) {
+                    const mesh = selectedObj.group.children[0];
+                    if(mesh && mesh.material) mesh.material.emissiveIntensity = 3.0;
+                    showDetailsPanel(hoveredObj.userData.dataObj); 
+                }
+            }
+            else { clearSelection(); closeDetails(); }
+        }
+
+        function showDetailsPanel(data) {
+            const panel = document.getElementById('DETAILS_PANEL');
+            panel.classList.remove('hidden-right');
+            
+            document.getElementById('infoTitle').innerText = data.label.replace(/_/g, ' ');
+            document.getElementById('infoContent').innerText = data.desc || "Semantic inference node.";
+            document.getElementById('infoMetaType').innerText = data.type;
+            document.getElementById('infoMetaParent').innerText = data.parent || "NONE";
+            document.getElementById('infoMetaCoords').innerText = `X:${Math.round(data.x)} Y:${Math.round(data.y)} Z:${Math.round(data.z)}`;
+            
+            const btn = document.getElementById('conceptualizeBtn');
+            btn.onclick = () => { conceptualizeNode(data); closeDetails(); };
+
+            controls.autoRotate = false;
+            controls.target.set(data.x, data.y, data.z);
+            camera.position.set(data.x, data.y + 10, data.z + 40);
+        }
+
+        function closeDetails() {
+            document.getElementById('DETAILS_PANEL').classList.add('hidden-right');
+            controls.autoRotate = false;
+            controls.target.set(0, 5, 0);
+        }
+
+        function toggleDetails() {
+            const panel = document.getElementById('DETAILS_PANEL');
+            panel.classList.toggle('hidden-right');
+        }
+        
+        function toggleTitleBar() {
+            const panel = document.getElementById('title-bar-panel');
+            const btn = document.getElementById('project-toggle-btn');
+            if (panel.classList.contains('opacity-0')) {
+                panel.classList.remove('opacity-0', 'pointer-events-none', '-translate-x-10');
+                btn.classList.add('opacity-0', 'pointer-events-none', '-translate-x-10');
+            } else {
+                panel.classList.add('opacity-0', 'pointer-events-none', '-translate-x-10');
+                btn.classList.remove('opacity-0', 'pointer-events-none', '-translate-x-10');
+            }
+        }
+
+        function onWindowResize() { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update(); 
+            renderer.render(scene, camera);
+        }
+
+        // --- UI & LOGZ LOGIC ---
+        const liteToggleBtn = document.getElementById('lite-toggle-btn');
+        const legendToggleBtn = document.getElementById('legend-toggle-btn');
+        const spectroLegend = document.getElementById('spectroLegend');
+        const outputPanel = document.getElementById('outputPanel');
+        const logFeed = document.getElementById('log-feed');
+
+        liteToggleBtn.onclick = () => {
+            isLiteMode = !isLiteMode; liteToggleBtn.innerText = `LITE: ${isLiteMode ? 'ON' : 'OFF'}`;
+            liteToggleBtn.classList.toggle('bg-[steelblue]'); liteToggleBtn.classList.toggle('text-black'); liteToggleBtn.classList.toggle('text-[#00ffcc]');
+        };
+
+        let toggleLEGEND = false; 
+        legendToggleBtn.onclick = () => { toggleLEGEND = !toggleLEGEND; if(toggleLEGEND) spectroLegend.classList.remove('hidden-panel'); else spectroLegend.classList.add('hidden-panel'); };
+        
+        function stopInference() {
+            outputPanel.classList.add('hidden-bottom');
+            if (isInferencing && window.LLM_INFERENCE) {
+                try {
+                    if (typeof window.LLM_INFERENCE.cancelProcessing === 'function') window.LLM_INFERENCE.cancelProcessing();
+                    else if (typeof window.LLM_INFERENCE.cancelGenerateResponseAsync === 'function') window.LLM_INFERENCE.cancelGenerateResponseAsync();
+                    addLog(`[SYSTEM ALERT] LLM Inference forcibly STOPPED by user.`, 'critical');
+                    isInferencing = false;
+                    document.getElementById('llmStatusDot').className = "w-2 h-2 rounded-full bg-[#00ffcc] animate-pulse"; 
+                    document.getElementById('llmStatus').innerText = "LLM ALIVE"; 
+                    document.getElementById('llmStatus').className = "text-[10px] font-bold tracking-[0.2em] text-[#00ffcc] uppercase";
+                } catch(e) { addLog(`[LLM_ERROR] Failed to stop: ${e.message}`, 'critical'); }
+            }
+            toggleLoading(false);
+        }
+
+        function toggleOutputPanel() { outputPanel.classList.toggle('hidden-bottom'); }
+        
+        function addLog(msg, type = 'info') {
+            const div = document.createElement('div'); div.className = 'data-node border-l-2';
+            const timestamp = new Date().toLocaleTimeString([], { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit', fractionalSecondDigits: 2 });
+            let colorClass = 'text-[#00ffcc]'; 
+            if(type === 'reflection') colorClass = 'text-yellow-400 font-bold';
+            if(type === 'metastate') colorClass = 'text-[#ff00ff] font-bold text-[15px]';
+            if(type === 'critical') colorClass = 'text-red-400 font-black tracking-wider bg-red-900/20 p-2';
+            div.innerHTML = `<span class="opacity-40">[${timestamp}]</span> <span class="${colorClass}">${msg}</span>`;
+            logFeed.appendChild(div);
+            if (logFeed.children.length > 50) logFeed.firstChild.remove();
+            logFeed.scrollTop = logFeed.scrollHeight;
+        }
+
+        function populateLegend() {
+            const legendContainer = document.getElementById('legend-content'); legendContainer.innerHTML = '';
+            ACTIVE_VIEW_DATA.forEach(d => {
+                let displayColor = d.color;
+                if (d.type === 'TARGET_TOKEN') displayColor = 0x87CEEB;
+
+                const item = document.createElement('div');
+                item.className = `flex items-center gap-3 p-2 rounded cursor-pointer hover:bg-white/5 transition-all border border-transparent hover:border-[#00ffcc]/30`;
+                item.innerHTML = `<div class="w-3 h-3 shrink-0 rounded-sm" style="background: #${displayColor.toString(16).padStart(6, '0')};"></div>
+                    <div class="flex flex-col"><span class="text-[12px] font-bold tracking-wider" style="color: #${displayColor.toString(16).padStart(6, '0')}">${d.type}</span><span class="text-[10px] opacity-70">${d.label}</span></div>`;
+                item.onclick = () => {
+                    const targetObj = orbGroup.find(o => o.label === d.label);
+                    if(targetObj) { 
+                        controls.autoRotate = false; 
+                        camera.position.set(targetObj.x, targetObj.y + 40, targetObj.z + 40); 
+                        controls.target.set(targetObj.x, targetObj.y, targetObj.z); 
+                    }
+                };
+                legendContainer.appendChild(item);
+            });
+        }
+        
+        function toggleOutputMinMax() {
+            if (outputPanel.style.height === '80vh') outputPanel.style.height = ''; 
+            else outputPanel.style.height = '80vh';
+        }
+
+        function showLogz() {
+            document.getElementById('log-feed').classList.remove('hidden'); document.getElementById('log-feed').classList.add('flex');
+            document.getElementById('experiment-viewz').classList.remove('flex'); document.getElementById('experiment-viewz').classList.add('hidden');
+        }
+
+        function showViewz() {
+            document.getElementById('log-feed').classList.remove('flex'); document.getElementById('log-feed').classList.add('hidden');
+            const viewz = document.getElementById('experiment-viewz');
+            viewz.classList.remove('hidden'); viewz.classList.add('flex');
+            viewz.innerHTML = `<pre class="whitespace-pre-wrap font-mono w-full text-yellow-300">[ DECIPHERABILITY_VIEW_MODULE ]\n\n> Hanging Tree Topology Active...\n> Awaiting conceptual injection.</pre>`;
+        }
+
+        // --- LLM LIFECYCLE MANAGEMENT ---
+        function toggleLoading(show, message = "LOADING...", isThinking = false) {
+            const overlay = document.getElementById('loadingOverlay'); 
+            const timerEl = document.getElementById('loadingTimer');
+            const textEl = document.getElementById('loadingOverlayText');
+            const spinner = overlay.querySelector('.spinner');
+
+            if (show) {
+                overlay.style.display = 'flex'; 
+                textEl.innerText = message;
+                
+                if (isThinking) {
+                    textEl.style.color = '#facc15'; textEl.style.textShadow = '0 0 10px #facc15';
+                    spinner.style.borderColor = 'rgba(250, 204, 21, 0.2)'; spinner.style.borderTopColor = '#facc15'; spinner.style.boxShadow = '0 0 15px rgba(250, 204, 21, 0.5)';
+                } else {
+                    textEl.style.color = '#00ffcc'; textEl.style.textShadow = '0 0 10px #00ffcc';
+                    spinner.style.borderColor = 'rgba(218, 112, 214, 0.4)'; spinner.style.borderTopColor = '#00ffcc'; spinner.style.boxShadow = '0 0 15px rgba(0, 255, 204, 0.5)';
+                }
+
+                loadingStartTime = Date.now(); 
+                if(loadingTimerInterval) clearInterval(loadingTimerInterval);
+                loadingTimerInterval = setInterval(() => { 
+                    const elapsed = ((Date.now() - loadingStartTime) / 1000).toFixed(1); 
+                    const subText = isThinking ? 'Inferencing conceptual latent space...' : 'Compiling weights & shaders.';
+                    const subColor = isThinking ? 'text-yellow-400' : 'text-[#00ffcc]';
+                    timerEl.innerHTML = `${elapsed}s<br><span class="text-xs ${subColor} mt-2 block">${subText}</span>`; 
+                }, 100);
+            } else {
+                overlay.style.display = 'none'; 
+                if (loadingTimerInterval) { clearInterval(loadingTimerInterval); loadingTimerInterval = null; }
+            }
+        }
+        
+        function forceCloseLoading() { 
+            toggleLoading(false); 
+            if (!hasInitializedThreeJS) initGallery(); 
+            if (isInferencing) stopInference();
+        }
+
+        async function initApp() {
+            toggleLoading(true, "loading LLM...");
+            try {
+                const { LlmInference, FilesetResolver } = await import('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-genai');
+                const genaiWasm = await FilesetResolver.forGenAiTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-genai/wasm");
+                window.LLM_INFERENCE = await LlmInference.createFromOptions(genaiWasm, { baseOptions: { modelAssetPath: "./models/gemma-4-E2B-it-web.task" }, maxTokens: 2048, topK: 40, temperature: 0.1 });
+                console.log("Gemma 4 LiteRT Engine initialized.");
+                
+                const dot = document.getElementById('llmStatusDot'); const text = document.getElementById('llmStatus');
+                dot.className = "w-2 h-2 rounded-full bg-[#00ffcc] animate-pulse"; text.innerText = "LLM ALIVE"; text.className = "text-[10px] font-bold tracking-[0.2em] text-[#00ffcc] uppercase";
+                
+                toggleLoading(false); if (!hasInitializedThreeJS) initGallery();
+            } catch (error) {
+                console.error("LLM Initialization Failed:", error);
+                const dot = document.getElementById('llmStatusDot'); const text = document.getElementById('llmStatus');
+                dot.className = "w-2 h-2 rounded-full bg-red-500"; text.innerText = `LLM OFFLINE (${error.message})`;
+                toggleLoading(false); if (!hasInitializedThreeJS) initGallery();
+            }
+        }
+
+        function triggerIdeogramTest(val) {
+            if (!val) return;
+            clearSelection();
+            closeDetails();
+            CURRENT_DOMAIN_NAME = val;
+            addLog(`> SWITCHING LENS FOCUS TO IDEOGRAM: [${val}]`, 'info');
+            buildHangingTree(val);
+        }
+
+        async function conceptualizeNode(data) {
+            outputPanel.classList.remove('hidden-bottom');
+            showLogz();
+
+            if (!window.LLM_INFERENCE) {
+                addLog(`[SYSTEM ALERT] LLM engine uninitialized. Running simulated benchmark output...`, 'critical');
+                setTimeout(() => {
+                    const mockStream = document.createElement('div');
+                    mockStream.className = "text-[#ff00ff] font-mono pl-4 mb-2 border-l-2 border-[#ff00ff]/50 break-words";
+                    mockStream.textContent = `.| encouraging [yes] | discouraging [no] | ambiguous [yes] | distinct [no] | zoom_in (${data.label}_ALPHA, ${data.label}_BETA) | zoom_out (${data.parent || 'ROOT_IDEOGRAM'}) | polysemous [yes] | homonymous [no] |.`;
+                    logFeed.appendChild(mockStream);
+                    logFeed.scrollTop = logFeed.scrollHeight;
+                }, 1000);
+                return;
+            }
+
+            try {
+                isInferencing = true;
+                const dot = document.getElementById('llmStatusDot'); const text = document.getElementById('llmStatus');
+                dot.className = "w-2 h-2 rounded-full bg-yellow-400 animate-ping"; text.innerText = "LLM THINKING..."; text.className = "text-[10px] font-bold tracking-[0.2em] text-yellow-400 uppercase";
+
+                addLog(`>> QUERYING METACOGNITIVE BENCHMARK FOR: [${data.label}]`, 'metastate');
+                
+                const promptContext = data.parent ? `in the conceptual context of "${data.parent}"` : `as a root ideogram`;
+                const prompt = `Task: Perform a metacognitive analysis on the token: "${data.label}" ${promptContext}.
+Analyze its decipherability, ambiguity, and semantic drift.
+Constraint: Output STRICTLY in the following METATEXT format. Provide your binary [yes/no] or textual answers inside the brackets. Do not add markdown or conversational text.
+.| encouraging [yes/no] | discouraging [yes/no] | ambiguous [yes/no] | distinct [yes/no] | zoom_in (list 2 sub-topics) | zoom_out (list 1 parent topic) | polysemous [yes/no] | homonymous [yes/no] |.`;
+                
+                const streamContainer = document.createElement('div');
+                streamContainer.className = "text-[#ff00ff] font-mono pl-4 mb-2 border-l-2 border-[#ff00ff]/50 break-words";
+                logFeed.appendChild(streamContainer);
+                
+                await window.LLM_INFERENCE.generateResponse(prompt, (partialResult, complete) => {
+                    if (partialResult) {
+                        streamContainer.textContent += partialResult;
+                        logFeed.scrollTop = logFeed.scrollHeight;
+                    }
+                });
+
+                addLog(`>> METACOGNITIVE_ANALYSIS COMPLETE.`, 'reflection');
+
+                dot.className = "w-2 h-2 rounded-full bg-[#00ffcc] animate-pulse"; text.innerText = "LLM ALIVE"; text.className = "text-[10px] font-bold tracking-[0.2em] text-[#00ffcc] uppercase";
+                isInferencing = false;
+
+            } catch(e) {
+                addLog(`[LLM_ERROR] ${e.message}`, 'critical');
+                isInferencing = false;
+                document.getElementById('llmStatusDot').className = "w-2 h-2 rounded-full bg-red-500"; 
+                document.getElementById('llmStatus').innerText = `LLM ERROR`;
+            }
+        }
+
+        window.onload = initApp;
+    </script>
+</body>
+</html>

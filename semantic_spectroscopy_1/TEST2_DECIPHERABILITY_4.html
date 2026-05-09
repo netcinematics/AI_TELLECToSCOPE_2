@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TEST_2 | Ideogram Decipherability</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { margin: 0; background: #000b0b; color: #00ffcc; font-family: 'Courier New', Courier, monospace; overflow: hidden; }
+        #canvas-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 1; }
+        .ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; pointer-events: none; }
+        .interactzone { pointer-events: auto; background: rgba(0, 15, 20, 0.85); border: 1px solid rgba(0, 255, 204, 0.3); backdrop-filter: blur(12px); border-radius: 8px; }
+        .spectro-scrollbar::-webkit-scrollbar { width: 6px; }
+        .spectro-scrollbar::-webkit-scrollbar-track { background: rgba(0, 40, 40, 0.5); }
+        .spectro-scrollbar::-webkit-scrollbar-thumb { background: #ff00ff; border-radius: 3px; }
+        #overlay-vignette { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle, transparent 50%, rgba(0,0,0,0.9) 100%); pointer-events: none; z-index: 2; }
+        .terminal-header { font-size: 0.7rem; letter-spacing: 2px; color: rgba(0, 255, 204, 0.5); border-bottom: 1px solid rgba(0, 255, 204, 0.2); margin-bottom: 8px; padding-bottom: 4px; }
+        .hidden-panel { opacity: 0; pointer-events: none; transform: translate(-20px, -50%); }
+        .output-panel { transform: translate(-50%, 0); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s; }
+        .output-panel.hidden-bottom { transform: translate(-50%, 120%); opacity: 0; pointer-events: none; }
+        .data-node { border-left: 2px solid transparent; padding-left: 12px; margin-bottom: 6px; padding-top: 4px; padding-bottom: 4px; transition: all 0.2s; }
+        .data-node:hover { border-left: 2px solid #00ffcc; background: rgba(0,255,204,0.1); }
+        select option { background: #001111; color: #00ffcc; }
+        #loadingOverlay { position: absolute; inset: 0; background: rgba(5, 5, 5, 0.8); backdrop-filter: blur(10px); z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #00ffcc; font-family: 'Courier New', Courier, monospace; pointer-events: auto; }
+        .spinner { width: 60px; height: 60px; border: 6px solid rgba(218, 112, 214, 0.4); border-top: 6px solid #00ffcc; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; box-shadow: 0 0 15px rgba(0, 255, 204, 0.5); }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .loading-text { font-size: 1.2rem; font-weight: bold; letter-spacing: 2px; text-shadow: 0 0 10px #00ffcc; animation: pulse 1.5s infinite; text-transform: uppercase; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        #DETAILS_PANEL { position: absolute; top: 220px; right: 24px; width: 300px; z-index: 60; border-top: 2px solid #ff00ff; transition: opacity 0.3s, transform 0.3s; }
+        #DETAILS_PANEL.hidden-right { opacity: 0; pointer-events: none; transform: translateX(50px); }
+        .glow-text { text-shadow: 0 0 12px rgba(255, 0, 255, 0.8); }
+    </style>
+</head>
+<body>
+
+    <div id="loadingOverlay">
+        <button onclick="forceCloseLoading()" class="absolute top-4 right-6 text-red-500 hover:text-white font-bold text-3xl z-[105] pointer-events-auto">✕</button>
+        <div class="spinner"></div>
+        <div class="loading-text" id="loadingOverlayText">loading LLM...</div>
+        <div id="loadingTimer" class="mt-4 text-emerald-400 font-mono text-lg font-bold text-center">0.0s</div>
+    </div>
+
+    <div id="canvas-container"></div>
+    <div id="overlay-vignette"></div>
+
+    <div style="user-select: none;" class="ui-layer">
+        <div class="absolute top-6 z-[60] right-6 interactzone px-4 py-2 flex items-center gap-2">
+            <div id="llmStatusDot" class="w-2 h-2 rounded-full bg-red-500"></div>
+            <span id="llmStatus" class="text-[10px] font-bold tracking-[0.2em] text-red-500 uppercase">LLM LOADING</span>
+        </div>
+
+        <div class="absolute top-[80px] right-6 flex flex-col items-end gap-[0.8em] z-[60] pointer-events-none">
+            <button id="lite-toggle-btn" class="interactzone px-4 py-2 text-[10px] font-bold tracking-widest border-r-4 border-[#00ffcc] text-[#00ffcc] hover:bg-[steelblue] hover:text-black transition-all rounded-lg pointer-events-auto">LITE: OFF</button>
+            <button id="legend-toggle-btn" class="interactzone px-4 py-2 text-[10px] font-bold tracking-widest border-r-4 border-[#ff00ff] text-[#ff00ff] hover:bg-[#ff00ff] hover:text-black transition-all rounded-lg pointer-events-auto">LEGEND</button>
+            <button onclick="toggleDetails()" class="interactzone px-4 py-2 text-[10px] font-bold tracking-widest border-r-4 border-yellow-400 text-yellow-400 hover:bg-yellow-400 hover:text-black transition-all rounded-lg pointer-events-auto mt-2">DETAILS</button>
+        </div>
+
+        <div id="title-bar-panel" class="w-[77%] md:w-[50%] absolute top-6 left-6 interactzone p-4 flex flex-col gap-1 border-l-4 border-[#ff00ff] transition-all duration-300 z-50">
+            <h1 class="text-2xl md:text-3xl font-bold uppercase tracking-widest text-emerald pr-6">TEST_2: "IDEOGRAM DECIPHERABILITY"</h1>
+            <div class="mt-2 flex items-center gap-2 w-full">
+                <select id="domain-select" class="bg-black/80 border border-[#00ffcc]/50 p-2 text-[#00ffcc] font-bold w-full pointer-events-auto rounded transition-colors uppercase tracking-widest" onchange="triggerIdeogramTest(this.value)">
+                    <option value="" disabled selected>-- SELECT IDEOGRAM FOR ANALYSIS --</option>
+                    <option value="ALPHA">1. ALPHA (α)</option>
+                    <option value="BETA">2. BETA (β)</option>
+                    <option value="DELTA">3. DELTA (δ)</option>
+                    <option value="SIGMA">4. SIGMA (σ)</option>
+                    <option value="OMEGA">5. OMEGA (ω)</option>
+                </select>
+            </div>
+        </div>
+
+        <div id="spectroLegend" class="absolute left-6 top-[280px] z-[60] interactzone p-4 w-[320px] max-h-[50vh] overflow-y-auto spectro-scrollbar pointer-events-auto transition-all duration-300 hidden-panel">
+            <div class="terminal-header"><span id="legend-title">MANIFOLD_LEGEND</span></div>
+            <div id="legend-content" class="flex flex-col gap-2"></div>
+        </div>
+
+        <div id="DETAILS_PANEL" class="hidden-right interactzone p-4 shadow-2xl pointer-events-auto flex flex-col gap-2">
+            <div class="flex justify-between items-start mb-2 border-b border-[#ff00ff]/30 pb-2">
+                <h3 id="infoTitle" class="text-[#ff00ff] font-black uppercase text-lg tracking-widest glow-text">NODE</h3>
+                <button onclick="closeDetails()" class="text-[#00ffcc] hover:text-white text-lg">✕</button>
+            </div>
+            <p id="infoContent" class="text-sm text-[#00ffcc] font-mono italic mb-2"></p>
+            <div class="grid grid-cols-1 gap-1 text-xs border-t border-[#00ffcc]/30 pt-2 font-mono">
+                <div class="flex justify-between"><span class="text-emerald-700">VECTOR:</span> <span id="infoMetaType" class="text-[#ff00ff] font-bold uppercase"></span></div>
+                <div class="flex justify-between"><span class="text-emerald-700">COORD:</span> <span id="infoMetaCoords" class="text-[#00ffcc] font-bold"></span></div>
+            </div>
+            <button id="conceptualizeBtn" class="mt-4 w-full border border-[#ff00ff] hover:bg-[#ff00ff] hover:text-black bg-black/50 py-2 text-xs text-[#ff00ff] transition-all uppercase font-black rounded">CONCEPTUALIZE</button>
+        </div>
+
+        <div id="outputPanel" class="output-panel hidden-bottom absolute bottom-24 left-1/2 w-[90%] md:w-[80%] max-w-5xl h-[40vh] interactzone flex flex-col z-50 pointer-events-auto border-t-2 border-[#ff00ff]">
+            <div class="flex justify-between items-center p-3 border-b border-[#00ffcc]/30 bg-black/60 shrink-0">
+                <span class="text-[12px] text-[#ff00ff] font-black uppercase">METACOGNITIVE_LLM_STREAM</span>
+                <div class="flex gap-2">
+                    <button onclick="stopInference()" class="text-red-500 border border-red-500/50 px-2 py-0.5 text-[14px] font-bold rounded">STOP</button>
+                    <button onclick="toggleOutputPanel()" class="text-[#00ffcc] hover:text-white px-2">✕</button>
+                </div>
+            </div>
+            <div id="log-feed" class="p-6 flex-grow overflow-y-auto spectro-scrollbar text-sm text-emerald-100 font-mono flex flex-col gap-3">
+                <div class="opacity-50">[SYS] Awaiting metacognitive domain selection...</div>
+            </div>
+        </div>
+
+        <div class="absolute bottom-6 left-6 interactzone px-4 py-2 pointer-events-auto rounded-full border border-[#ff00ff]/50">
+            <button onclick="toggleOutputPanel()" class="text-[12px] font-bold tracking-widest text-[#ff00ff]">📝 LOGZ (CONSOLE)</button>
+        </div>
+    </div>
+
+    <script>
+        let scene, camera, renderer, controls, raycaster, mouse;
+        let orbGroup = [];
+        let netzLines = [];
+        let selectionRing = null; // Single selection helper
+        let selectedObjLabel = null; // Track current selection label
+        
+        let isLiteMode = false;
+        let hoveredObj = null;
+        let isInferencing = false;
+
+        const IDEOGRAM_DATA = {
+            "ALPHA": {
+                desc: "The first. The beginning. A primary origin point.",
+                contexts: [
+                    { label: "FINANCE", desc: "Performance relative to a benchmark index.", children: [{label: "EXCESS_RETURN", sub: ["YIELD_DELTA", "RISK_ADJUST"]}, {label: "MARKET_BEAT", sub: ["OUTPERFORM", "ALPHA_CAPTURE"]}] },
+                    { label: "PHYSICS", desc: "Helium nucleus radiation topology.", children: [{label: "ALPHA_PARTICLE", sub: ["HELIUM_ION", "IONIZING"]}, {label: "RADIATION_DECAY", sub: ["HALF_LIFE", "ISOTOPE"]}] },
+                    { label: "SOCIALS", desc: "Hierarchical dominance structures.", children: [{label: "APEX_LEADER", sub: ["DOMINANCE", "HIERARCHY"]}, {label: "DOMINANT_NODE", sub: ["CENTRALITY", "INFLUENCE"]}] },
+                    { label: "SOFTWARE", desc: "Initial, unstable testing phase.", children: [{label: "INTERNAL_BUILD", sub: ["NIGHTLY", "PRE_BETA"]}, {label: "PROTOTYPE", sub: ["WIREFRAME", "MOCKUP"]}] }
+                ]
+            },
+            "BETA": {
+                desc: "The second. Derived from 'beth' (house).",
+                contexts: [
+                    { label: "FINANCE", desc: "Measurement of systematic risk.", children: [{label: "VOLATILITY", sub: ["BETA_COEFF", "SWING"]}, {label: "MARKET_CORRELATION", sub: ["PEGGED", "VARIANCE"]}] },
+                    { label: "PHYSICS", desc: "High-energy, high-speed electrons.", children: [{label: "POSITRON", sub: ["ANTIMATTER", "CHARGE"]}, {label: "BETA_DECAY", sub: ["NEUTRINO", "EMISSION"]}] },
+                    { label: "SOFTWARE", desc: "Secondary testing phase prior to launch.", children: [{label: "PUBLIC_TEST", sub: ["OPEN_BETA", "FEEDBACK"]}, {label: "PRE_RELEASE", sub: ["RC1", "STAGING"]}] },
+                    { label: "ANCIENT_MATH", desc: "Numerical value notation.", children: [{label: "NUMERAL_TWO", sub: ["SECOND", "DUAL"]}, {label: "HOUSE_SYMBOL", sub: ["BETH", "SHELTER"]}] }
+                ]
+            },
+            "DELTA": {
+                desc: "The fourth. The symbol of change and transition.",
+                contexts: [
+                    { label: "MATHEMATICS", desc: "Differential transition state.", children: [{label: "VARIANCE", sub: ["DIFF", "STEP"]}, {label: "GRADIENT_SHIFT", sub: ["SLOPE", "RATE"]}] },
+                    { label: "GEOGRAPHY", desc: "Triangular alluvial landforms.", children: [{label: "RIVER_MOUTH", sub: ["ESTUARY", "ALLUVIAL"]}, {label: "SILT_DEPOSIT", sub: ["SEDIMENT", "FAN"]}] },
+                    { label: "FINANCE", desc: "Rate of change in options pricing.", children: [{label: "HEDGE_RATIO", sub: ["NEUTRAL", "POSITION"]}, {label: "PRICE_SENSITIVITY", sub: ["DERIVATIVE", "OPTION"]}] }
+                ]
+            },
+            "SIGMA": {
+                desc: "The eighteenth. Aggregation and dispersion.",
+                contexts: [
+                    { label: "STATISTICS", desc: "Standard deviation from the mean.", children: [{label: "STAT_VARIANCE", sub: ["CURVE", "DISTRIBUTION"]}, {label: "SIX_SIGMA", sub: ["QUALITY", "DEFECT"]}] },
+                    { label: "MATHEMATICS", desc: "The summation operator.", children: [{label: "TOTALITY", sub: ["AGGREGATE", "LIMIT"]}, {label: "SERIES_SUM", sub: ["CALCULUS", "SEQUENCE"]}] },
+                    { label: "SOCIALS", desc: "Independent, non-hierarchical actors.", children: [{label: "LONE_WOLF", sub: ["ISOLATION", "INDEPENDENCE"]}, {label: "OUTSIDE_SYSTEM", sub: ["FRINGE", "OUTCAST"]}] }
+                ]
+            },
+            "OMEGA": {
+                desc: "The twenty-fourth. The ultimate boundary or conclusion.",
+                contexts: [
+                    { label: "PHYSICS", desc: "Electrical resistance or angular velocity.", children: [{label: "OHM_RESISTANCE", sub: ["IMPEDANCE", "CIRCUIT"]}, {label: "ANGULAR_SPEED", sub: ["RADIAN", "VELOCITY"]}] },
+                    { label: "COSMOLOGY", desc: "Density parameter of the universe.", children: [{label: "UNIVERSE_DENSITY", sub: ["BIG_CRUNCH", "EXPANSION"]}, {label: "CRITICAL_MASS", sub: ["THRESHOLD", "COLLAPSE"]}] },
+                    { label: "PHILOSOPHY", desc: "The end of sequences.", children: [{label: "THE_ULTIMATE", sub: ["ABSOLUTE", "ZENITH"]}, {label: "FINALITY", sub: ["CLOSURE", "TERMINUS"]}] }
+                ]
+            }
+        };
+
+        let ACTIVE_VIEW_DATA = [];
+
+        function createLabel(text, size, colorHex, yOffset = 0) {
+            const canvas = document.createElement('canvas'); 
+            canvas.width = 300; canvas.height = 64;
+            const ctx = canvas.getContext('2d');
+            const colorString = '#' + colorHex.toString(16).padStart(6, '0');
+            ctx.shadowColor = 'rgba(0,0,0,0.8)'; ctx.shadowBlur = 4;
+            ctx.fillStyle = colorString; ctx.font = 'bold 32px Courier New';
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillText(text.replace(/_/g, ' '), 150, 32);
+            const tex = new THREE.CanvasTexture(canvas);
+            const spriteMat = new THREE.SpriteMaterial({ map: tex, transparent: true });
+            const sprite = new THREE.Sprite(spriteMat);
+            sprite.scale.set(size * 4, size * 0.85, 1);
+            sprite.position.y = -size - 2 + yOffset;
+            return sprite;
+        }
+
+        function createLineLabel(text, colorHex) {
+            const canvas = document.createElement('canvas'); 
+            canvas.width = 256; canvas.height = 64;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#' + colorHex.toString(16).padStart(6, '0');
+            ctx.font = 'bold 24px Courier New'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillText(text, 128, 32);
+            const tex = new THREE.CanvasTexture(canvas);
+            const spriteMat = new THREE.SpriteMaterial({ map: tex, transparent: true });
+            const sprite = new THREE.Sprite(spriteMat);
+            sprite.scale.set(10, 2.5, 1);
+            return sprite;
+        }
+
+        function initGallery() {
+            scene = new THREE.Scene(); 
+            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, -120, 1);
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.getElementById('canvas-container').appendChild(renderer.domElement);
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            raycaster = new THREE.Raycaster(); mouse = new THREE.Vector2();
+            scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+            const dl = new THREE.DirectionalLight(0xffffff, 0.8); dl.position.set(20, 50, 20); scene.add(dl);
+
+            window.addEventListener('resize', () => { camera.aspect = window.innerWidth / window.innerHeight; camera.updateProjectionMatrix(); renderer.setSize(window.innerWidth, window.innerHeight); });
+            window.addEventListener('pointermove', onPointerMove);
+            window.addEventListener('dblclick', onDoubleClick);
+            animate();
+            triggerIdeogramTest("ALPHA");
+        }
+
+        function buildHangingTree(ideoKey) {
+            orbGroup.forEach(o => scene.remove(o.group)); orbGroup = [];
+            netzLines.forEach(l => scene.remove(l)); netzLines = [];
+            if(selectionRing) { scene.remove(selectionRing); selectionRing = null; selectedObjLabel = null; }
+
+            const data = IDEOGRAM_DATA[ideoKey];
+            const R1 = 25, R2 = 45, R3 = 65;
+            const Y1 = 15, Y2 = -5, Y3 = -25;
+            
+            // Root
+            ACTIVE_VIEW_DATA = [{ label: ideoKey, type: 'TARGET_TOKEN', color: 0x87CEEB, size: 8, x: 0, y: 35, z: 0, desc: data.desc, parent: null, labelYOffset: 0 }];
+
+            data.contexts.forEach((ctx, i) => {
+                const angle1 = (i / data.contexts.length) * Math.PI * 2 + Math.PI/4;
+                const cX = Math.cos(angle1) * R1, cZ = Math.sin(angle1) * R1;
+                const colorMid = new THREE.Color().setHSL(i/data.contexts.length, 1.0, 0.65).getHex();
+                ACTIVE_VIEW_DATA.push({ label: ctx.label, type: 'META_CONTEXT', color: colorMid, size: 5, x: cX, y: Y1, z: cZ, desc: ctx.desc, parent: ideoKey, labelYOffset: (i%2===0?0:-6) });
+
+                ctx.children.forEach((child, j) => {
+                    const angle2 = angle1 + ((j - (ctx.children.length-1)/2) * (Math.PI/4));
+                    const chX = Math.cos(angle2) * R2, chZ = Math.sin(angle2) * R2;
+                    const colorBot = new THREE.Color().setHSL(i/data.contexts.length, 1.0, 0.45).getHex();
+                    ACTIVE_VIEW_DATA.push({ label: child.label, type: 'POLYSEMOUS_NODE', color: colorBot, size: 3.5, x: chX, y: Y2, z: chZ, desc: "Polysemy node", parent: ctx.label, labelYOffset: (j%2===0?0:-8) });
+
+                    child.sub.forEach((sub, k) => {
+                        const angle3 = angle2 + ((k - (child.sub.length-1)/2) * (Math.PI/8));
+                        const sX = Math.cos(angle3) * R3, sZ = Math.sin(angle3) * R3;
+                        const colorDeep = new THREE.Color().setHSL(i/data.contexts.length, 1.0, 0.25).getHex();
+                        ACTIVE_VIEW_DATA.push({ label: sub, type: 'DEEP_CONCEPT', color: colorDeep, size: 2.0, x: sX, y: Y3, z: sZ, desc: "Sub-concept", parent: child.label, labelYOffset: (k%2===0?0:-10) });
+                    });
+                });
+            });
+
+            ACTIVE_VIEW_DATA.forEach(d => {
+                const group = new THREE.Group(); group.position.set(d.x, d.y, d.z);
+                const mat = new THREE.MeshStandardMaterial({ color: d.color, metalness: 0.8, roughness: 0.2 });
+                const mesh = new THREE.Mesh(new THREE.SphereGeometry(d.size, 32, 32), mat);
+                group.add(mesh);
+                const hitbox = new THREE.Mesh(new THREE.SphereGeometry(d.size * 1.5, 12, 12), new THREE.MeshBasicMaterial({visible: false}));
+                hitbox.userData = { isHitbox: true, data: d }; group.add(hitbox);
+                group.add(createLabel(d.label, d.size, d.color, d.labelYOffset));
+                scene.add(group); orbGroup.push({ group, ...d });
+            });
+
+            ACTIVE_VIEW_DATA.forEach(n => {
+                if(n.parent) {
+                    const p = orbGroup.find(o => o.label === n.parent);
+                    if(p) {
+                        const geo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(p.x, p.y, p.z), new THREE.Vector3(n.x, n.y, n.z)]);
+                        const line = new THREE.Line(geo, new THREE.LineBasicMaterial({ color: n.color, opacity: 0.3, transparent: true }));
+                        scene.add(line); netzLines.push(line);
+                    }
+                }
+            });
+            populateLegend();
+        }
+
+        function populateLegend() {
+            const container = document.getElementById('legend-content'); container.innerHTML = '';
+            orbGroup.forEach(o => {
+                const item = document.createElement('div');
+                item.className = "flex items-center gap-2 p-1 text-[10px] cursor-pointer hover:bg-white/10";
+                item.innerHTML = `<div class="w-2 h-2" style="background:#${o.color.toString(16).padStart(6,'0')}"></div><span>${o.label}</span>`;
+                item.onclick = () => { controls.target.set(o.x, o.y, o.z); camera.position.set(o.x, o.y+20, o.z+40); };
+                container.appendChild(item);
+            });
+        }
+
+        function onPointerMove(e) {
+            mouse.x = (e.clientX/window.innerWidth)*2-1; mouse.y = -(e.clientY/window.innerHeight)*2+1;
+            raycaster.setFromCamera(mouse, camera);
+            const hits = raycaster.intersectObjects(orbGroup.map(o => o.group.children.find(c => c.userData.isHitbox)).filter(Boolean));
+            document.body.style.cursor = hits.length > 0 ? 'pointer' : 'auto';
+            hoveredObj = hits.length > 0 ? hits[0].object : null;
+        }
+
+        function onDoubleClick() {
+            // If we double click the background, clear selection
+            if(!hoveredObj) {
+                clearSelection();
+                closeDetails();
+                return;
+            }
+
+            const data = hoveredObj.userData.data;
+
+            // If we double click the currently selected node, toggle it off
+            if(selectedObjLabel === data.label) {
+                clearSelection();
+                closeDetails();
+                return;
+            }
+
+            // Otherwise, perform a new selection
+            clearSelection();
+            selectedObjLabel = data.label;
+            
+            // Create Cyan Wireframe Ring
+            const ringGeo = new THREE.SphereGeometry(data.size * 1.2, 16, 16);
+            const ringMat = new THREE.MeshBasicMaterial({ color: 0x00ffff, wireframe: true, transparent: true, opacity: 0.6 });
+            selectionRing = new THREE.Mesh(ringGeo, ringMat);
+            selectionRing.position.set(data.x, data.y, data.z);
+            scene.add(selectionRing);
+
+            showDetailsPanel(data);
+        }
+
+        function clearSelection() {
+            if(selectionRing) {
+                scene.remove(selectionRing);
+                selectionRing = null;
+            }
+            selectedObjLabel = null;
+        }
+
+        function showDetailsPanel(data) {
+            document.getElementById('DETAILS_PANEL').classList.remove('hidden-right');
+            document.getElementById('infoTitle').innerText = data.label;
+            document.getElementById('infoContent').innerText = data.desc;
+            document.getElementById('infoMetaType').innerText = data.type;
+            document.getElementById('infoMetaCoords').innerText = `X:${Math.round(data.x)} Y:${Math.round(data.y)}`;
+            document.getElementById('conceptualizeBtn').onclick = () => conceptualizeNode(data);
+            controls.target.set(data.x, data.y, data.z);
+        }
+
+        function closeDetails() { document.getElementById('DETAILS_PANEL').classList.add('hidden-right'); }
+        function toggleDetails() { document.getElementById('DETAILS_PANEL').classList.toggle('hidden-right'); }
+        function toggleOutputPanel() { document.getElementById('outputPanel').classList.toggle('hidden-bottom'); }
+
+        function triggerIdeogramTest(val) { buildHangingTree(val); addLog(`Lens Focus: [${val}]`); }
+
+        function addLog(msg) {
+            const div = document.createElement('div'); div.className = "data-node border-l-2 border-[#00ffcc]";
+            div.innerHTML = `<span class="opacity-40">[${new Date().toLocaleTimeString()}]</span> ${msg}`;
+            document.getElementById('log-feed').appendChild(div);
+            document.getElementById('log-feed').scrollTop = document.getElementById('log-feed').scrollHeight;
+        }
+
+        async function conceptualizeNode(data) {
+            toggleOutputPanel();
+            addLog(`Querying Metacognitive analysis for ${data.label}...`);
+            if(!window.LLM_INFERENCE) {
+                setTimeout(() => addLog(`[SIM] .| distinct [yes] | polysemous [yes] | zoom_in (${data.label}_A, ${data.label}_B) |.`), 1000);
+                return;
+            }
+        }
+
+        function animate() { requestAnimationFrame(animate); controls.update(); renderer.render(scene, camera); if(selectionRing) selectionRing.rotation.y += 0.01; }
+        function forceCloseLoading() { document.getElementById('loadingOverlay').style.display='none'; initGallery(); }
+        window.onload = () => { setTimeout(forceCloseLoading, 1500); };
+    </script>
+</body>
+</html>
