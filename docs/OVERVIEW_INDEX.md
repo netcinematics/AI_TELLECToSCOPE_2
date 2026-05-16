@@ -1,16 +1,20 @@
-## AXIOMZA - SPECTRoSCOPE | Axiomatic_Augmentation for AI:
+## 3D SPECTRoSCOPE | Axiomatic_Augmentation for AI:
 
 > "SPECTRoSCOPE", for 3D CONCEPT_VISUALIZATION of latent space with "MECHANISTIC INTERPRETABILITY".
 
-Enable any knowledge seeker, to SEE CONCEPTS VIBRANTLY, from Gemini LLM - with intuitive 3D TOOLS!
+SEE CONCEPTS VIVIDLY, from Gemini LLM - with intuitive 3D TOOLS!
 
 Make knowledge "CONCEPTUALLY_ACCESSIBILE".
 
-Help enable others to "DECIPHER_ACTUAL_REALITY" & "EXACTIFY".
+Help enable others to "DECIPHER_ACTUAL_REALITY".
+
+And "EXACTIFY" input prompts to "HIGH_PROBABILITY" tokens!
+
+> AI EXPERIMENTS in SINGULAR HTML FILES!
 
 #### Google / Kaggle | Hackathon | Gemma 4 Good!
 
-<img width="333" height="222" alt="axi_8" src="https://github.com/user-attachments/assets/2a47584c-1b7d-437a-a6c6-1f0e82e08277" />
+<img width="333" height="333" alt="axi_8" src="https://github.com/user-attachments/assets/2a47584c-1b7d-437a-a6c6-1f0e82e08277" />
 
 
 ______________________________________________________________________
