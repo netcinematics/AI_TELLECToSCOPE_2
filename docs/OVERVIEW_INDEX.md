@@ -89,6 +89,19 @@ _____________________________________________________________________
 <img width="1184" height="529" alt="Screenshot 2026-05-15 193212" src="https://github.com/user-attachments/assets/070b7078-bc3b-47d2-a187-91f00c46d111" />
 
 
+<img width="1053" height="855" alt="Screenshot 2026-05-08 111904" src="https://github.com/user-attachments/assets/340d1baa-7670-4dd9-abaa-1e9829a1f02f" />
+
+<img width="1054" height="858" alt="Screenshot 2026-05-08 135836" src="https://github.com/user-attachments/assets/9c3a4041-6264-4022-beae-b52e8ce468c4" />
+
+<img width="1057" height="859" alt="Screenshot 2026-05-08 141217" src="https://github.com/user-attachments/assets/4c91ed91-6f52-468f-9a91-21a0f90055a9" />
+
+<img width="547" height="460" alt="Screenshot 2026-05-07 094142" src="https://github.com/user-attachments/assets/deec31a7-5806-4b20-980a-fa376492bd0e" />
+<img width="755" height="889" alt="Screenshot 2026-05-06 134427" src="https://github.com/user-attachments/assets/0f8da746-0be0-4a53-9b80-59326b7ddffe" />
+<img width="748" height="841" alt="Screenshot 2026-05-08 163325" src="https://github.com/user-attachments/assets/fa0d72fd-f660-4fba-8368-05bfb396677a" />
+
+
+
+
 > WHAT DOES THE RESEARCH SHOW?
 - one
 
@@ -96,11 +109,24 @@ _____________________________________________________________________
 _____________________________________________________________________
 ### 2) CONCEPT_TREEZ:
 
+<img width="984" height="629" alt="Screenshot 2026-05-10 205049" src="https://github.com/user-attachments/assets/ff4a3d93-facc-4997-8622-ecf25dc19050" />
+
+
+<img width="962" height="857" alt="Screenshot 2026-05-10 192331" src="https://github.com/user-attachments/assets/c3b0d205-e1ee-4dee-8588-2ed8528a76bb" />
+
+<img width="1641" height="798" alt="Screenshot 2026-05-10 183627" src="https://github.com/user-attachments/assets/f07f2d50-fbfb-49a3-bedd-6e93be5e9b16" />
+
+<img width="920" height="846" alt="Screenshot 2026-05-10 100054" src="https://github.com/user-attachments/assets/c7daf1e5-dd00-4a24-ab39-2d3626e2243c" />
+
+
 
 > WHAT DOES THE RESEARCH SHOW?
 - one
 _____________________________________________________________________
 ### 3) CONCEPTUAL_SHOWCASE:
+
+<img width="1211" height="637" alt="Screenshot 2026-05-14 124406" src="https://github.com/user-attachments/assets/6e2f393c-6bf4-4a08-a858-7a75e4e08156" />
+
 
 > WHAT DOES THE RESEARCH SHOW?
 - one
@@ -108,6 +134,19 @@ _____________________________________________________________________
 
 
 <img width="1510" height="861" alt="Screenshot 2025-02-11 173123" src="https://github.com/user-attachments/assets/98ebc17f-fb53-4ffd-a662-e1b5e6734b37" />
+
+_____________________________________________________
+
+
+
+
+<img width="861" height="539" alt="Screenshot jjj2026-05-13 131232" src="https://github.com/user-attachments/assets/84ea9b8b-cfb5-4b6c-a264-f07b85416e5d" />
+
+
+<img width="662" height="390" alt="Screenshot 2026-05-13 131015" src="https://github.com/user-attachments/assets/20de97f3-1487-4297-b56f-145a90602eb6" />
+<img width="1124" height="569" alt="Screenshot 2026-05-14 112731" src="https://github.com/user-attachments/assets/7d364fc4-c192-4493-b164-3c39b5a9213c" />
+<img width="707" height="845" alt="Screenshot 2026-05-14 123739" src="https://github.com/user-attachments/assets/7744997f-f7ae-445a-a8c8-073160523072" />
+
 
 _____________________________________________________
 
