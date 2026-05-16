@@ -1,4 +1,4 @@
-## SPECTRoSCOPE | AXIOMZA | Axiomatic Optimizations for AI:
+## SPECTRoSCOPE | Axiomatic Optimizations for AI:
 
 > The "SPECTRoSCOPE" is a SEMANTIC MICROSCOPE, for 3D CONCEPT_VISUALIZATION of latent space and "MECHANISTIC INTERPRETABILITY".
 
@@ -13,7 +13,9 @@ ______________________________________________________________________
 "Digtal Equity & Inclusivity", linguistic diversity, intuitive interfaces, and 3D tools to close AI SKILLS gap.
 
 - "HIGH_DENSITY_INFERENCE" using Gemma 4.
-- to "EXPONENTIALLY SCALE INNOVATION"!
+- To "EXPONENTIALLY SCALE INNOVATION"!
+
+> By reducing AMBIGUITY and increasing ARTICULATION.
 
 ____________________________________________________________________________
 
@@ -27,6 +29,47 @@ ____________________________________________________________________________
 
 > clever ways to solve MISNOMER, AMBIGUITY, and CONCEPTUAL_DRIFT.
 
+____________________________________________________________________
+
+### ENVIRONMENT:
+
+Creative three.js visualizations, in a single HTML file, with MEDIAPIPE and LiteRT!
+```JavaScript
+      const { LlmInference, FilesetResolver } = await import('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-genai');
+      const genaiWasm = await FilesetResolver.forGenAiTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-genai/wasm");
+      // Bumping temperature to 0.4 to encourage novelty and break loops in Q&A generation
+      window.LLM_INFERENCE = await LlmInference.createFromOptions(genaiWasm, { baseOptions: { 
+        modelAssetPath: "./models/gemma-4-E2B-it-web.task" }, 
+        maxTokens: 2048, topK: 40, temperature: 0.4 });
+```
+_____________________________________________________________________
+
+### EXAMPLES:
+
+#### 1) SEMANTIC_TOPOLOGY:
+
+#### 2) CONCEPT_TREEZ:
+
+#### 3) CONCEPTUAL_SHOWCASE:
+
+_____________________________________________________________________
+
+### 1) SEMANTIC_TOPOLOGY:
+
+> WHAT DOES THE RESEARCH SHOW?
+- one
+_____________________________________________________________________
+### 2) CONCEPT_TREEZ:
+
+
+> WHAT DOES THE RESEARCH SHOW?
+- one
+_____________________________________________________________________
+### 3) CONCEPTUAL_SHOWCASE:
+
+> WHAT DOES THE RESEARCH SHOW?
+- one
+_____________________________________________________________________
 
 <img width="1024" height="1024" alt="axi_8" src="https://github.com/user-attachments/assets/2a47584c-1b7d-437a-a6c6-1f0e82e08277" />
 
