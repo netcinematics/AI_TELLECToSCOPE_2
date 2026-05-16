@@ -56,8 +56,12 @@ _____________________________________________________________________
 
 ### 1) SEMANTIC_TOPOLOGY:
 
+<img width="1478" height="903" alt="Screenshot 2026-05-01 111844" src="https://github.com/user-attachments/assets/685670b4-7ca4-4808-8369-4379496ced1c" />
+
 > WHAT DOES THE RESEARCH SHOW?
 - one
+
+- 
 _____________________________________________________________________
 ### 2) CONCEPT_TREEZ:
 
@@ -784,7 +788,7 @@ Here is a look at the current SPECTRoSCOPE:
 
 _____________________________________________________
 
-<img width="1478" height="903" alt="Screenshot 2026-05-01 111844" src="https://github.com/user-attachments/assets/685670b4-7ca4-4808-8369-4379496ced1c" />
+
 You can CONCEPTUALLY ZOOM_IN to the METASTATE - of any CONCEPT in the LLM!  
 <img width="1567" height="915" alt="Screenshot 2026-04-30 143611" src="https://github.com/user-attachments/assets/3e67527c-3bec-46a1-a54a-5fcaa6d32e1f" />
 
