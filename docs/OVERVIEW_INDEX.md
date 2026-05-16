@@ -1,14 +1,51 @@
 ## 3D SPECTRoSCOPE | Axiomatic_Augmentation for AI:
 
-> "SPECTRoSCOPE", for 3D CONCEPT_VISUALIZATION of latent space.
+> "SPECTRoSCOPE", for 3D CONCEPT_VISUALIZATION of latent space!
 
-Innovative Techniques, within "MECHANISTIC INTERPRETABILITY".
+Innovative AI VISUALIZATION Techniques, within "MECHANISTIC INTERPRETABILITY".
 
-> From Google Gemma and LiteRT - SEE CONCEPTS VIVIDLY - with intuitive 3D TOOLS!
+_______________________________________________________
 
-- Make knowledge "CONCEPTUALLY_ACCESSIBILE".
+## Google / Kaggle | Hackathon | Gemma 4 Good!
 
-- Help enable "DECIPHER_ABILITY".
+> 3 CREATIVE AI EXPERIMENTS - in SINGULAR HTML FILES - with Gemma & LiteRT!
+
+> From Google Gemma and LiteRT - SEE AI CONCEPTS VIVIDLY - with scalable & intuitive 3D TOOLS!
+__________________________________________________
+
+### QUICK SETUP
+
+Easy to run & replicate - singular HTML files!
+
+HOW to RUN: these 3 HTML experiments, with LiteRT & GEMMA 4!
+
+1) THIS IS HOW EASY it is to ACCESS SIMPLE GEMMA BRAIN (locally) - in HTML!
+    **modelAssetPath: "./models/gemma-4-E2B-it-web.task"**
+   
+2) Then run SPECTRoSCOPE in localhost. Nothing else!
+
+> Showing how Gemma is an extremely PORTABLE BRAIN!
+
+Let's SEE WHAT IT CAN DO - with creative three.js visualizations, using LiteRT to attempt "DENSE_INFERENCE" with GEMMA!
+
+#### LiteRT | light-weight integration | 
+```JavaScript
+      const { LlmInference, FilesetResolver } = await import('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-genai');
+      const genaiWasm = await FilesetResolver.forGenAiTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-genai/wasm");
+      // Bump up temperature to 0.4 to encourage novelty and break repetitive loops in Q&A generation.
+      window.LLM_INFERENCE = await LlmInference.createFromOptions(genaiWasm, { baseOptions: { 
+        modelAssetPath: "./models/gemma-4-E2B-it-web.task" }, 
+        maxTokens: 2048, topK: 40, temperature: 0.4 });
+```
+
+> It is beyond amazing! Let's navigate the FRONTIER of LLM CONCEPTS!
+___________________________________________________________
+
+### PASSION PROJECT: "ALPHABITZA"
+
+- Make knowledge "CONCEPTUALLY_ACCESSIBILE", with clearer words.
+
+- Help enable "DECIPHER_ABILITY", and reduce language confusion.
 
 ___________________________________________
 
@@ -25,14 +62,9 @@ ___________________________________________
 Examples of these DEEP CONCEPTS - simplified below.
 
 > AI SEMANTICS VISUALIZED.
-__________________________________________________
-Easy to replicate and run:
 
-> 3 CREATIVE AI EXPERIMENTS - in SINGULAR HTML FILES - with Gemma & LiteRT!
 
-## Google / Kaggle | Hackathon | Gemma 4 Good!
 
-<img width="333" height="333" alt="axi_8" src="https://github.com/user-attachments/assets/2a47584c-1b7d-437a-a6c6-1f0e82e08277" />
 ______________________________________________________________________
 
 ### AI RESEARCH TRACK: 
@@ -172,26 +204,7 @@ ____________________________________________________________________
 
 ### ENVIRONMENT:
 
-HOW to RUN: these 3 HTML experiments, with LiteRT & GEMMA 4!
 
-1) YOU ONLY NEED TO PLUG IN THE MODEL locally,
-    **modelAssetPath: "./models/gemma-4-E2B-it-web.task"**
-   
-2) Then run in localhost.
-
-Run a SINGLE HTML FILE, with creative three.js visualizations, with MEDIAPIPE, LiteRT to INFERENCE with GEMMA!
-
-### KEY SETUP COMPONENT (light-weight integration):
-```JavaScript
-      const { LlmInference, FilesetResolver } = await import('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-genai');
-      const genaiWasm = await FilesetResolver.forGenAiTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-genai/wasm");
-      // Bump up temperature to 0.4 to encourage novelty and break repetitive loops in Q&A generation.
-      window.LLM_INFERENCE = await LlmInference.createFromOptions(genaiWasm, { baseOptions: { 
-        modelAssetPath: "./models/gemma-4-E2B-it-web.task" }, 
-        maxTokens: 2048, topK: 40, temperature: 0.4 });
-```
-
-> It is beyond amazing! Let's navigate the FRONTIER of LLM CONCEPTS!
 
 _____________________________________________________________________
 
@@ -202,15 +215,17 @@ _____________________________________________________________________
 
 <img width="1184" height="529" alt="Screenshot 2026-05-15 193212" src="https://github.com/user-attachments/assets/070b7078-bc3b-47d2-a187-91f00c46d111" />
 
-
+11
 <img width="1053" height="855" alt="Screenshot 2026-05-08 111904" src="https://github.com/user-attachments/assets/340d1baa-7670-4dd9-abaa-1e9829a1f02f" />
-
+22
 <img width="1054" height="858" alt="Screenshot 2026-05-08 135836" src="https://github.com/user-attachments/assets/9c3a4041-6264-4022-beae-b52e8ce468c4" />
-
+33
 <img width="1057" height="859" alt="Screenshot 2026-05-08 141217" src="https://github.com/user-attachments/assets/4c91ed91-6f52-468f-9a91-21a0f90055a9" />
-
+44
 <img width="547" height="460" alt="Screenshot 2026-05-07 094142" src="https://github.com/user-attachments/assets/deec31a7-5806-4b20-980a-fa376492bd0e" />
+55
 <img width="755" height="889" alt="Screenshot 2026-05-06 134427" src="https://github.com/user-attachments/assets/0f8da746-0be0-4a53-9b80-59326b7ddffe" />
+66
 <img width="748" height="841" alt="Screenshot 2026-05-08 163325" src="https://github.com/user-attachments/assets/fa0d72fd-f660-4fba-8368-05bfb396677a" />
 
 
@@ -224,12 +239,12 @@ _____________________________________________________________________
 ### 2) CONCEPT_TREEZ:
 
 <img width="984" height="629" alt="Screenshot 2026-05-10 205049" src="https://github.com/user-attachments/assets/ff4a3d93-facc-4997-8622-ecf25dc19050" />
-
+77
 
 <img width="962" height="857" alt="Screenshot 2026-05-10 192331" src="https://github.com/user-attachments/assets/c3b0d205-e1ee-4dee-8588-2ed8528a76bb" />
-
+88
 <img width="1641" height="798" alt="Screenshot 2026-05-10 183627" src="https://github.com/user-attachments/assets/f07f2d50-fbfb-49a3-bedd-6e93be5e9b16" />
-
+99
 <img width="920" height="846" alt="Screenshot 2026-05-10 100054" src="https://github.com/user-attachments/assets/c7daf1e5-dd00-4a24-ab39-2d3626e2243c" />
 
 
@@ -249,9 +264,11 @@ _____________________________________________________________________
 
 <img width="861" height="539" alt="Screenshot jjj2026-05-13 131232" src="https://github.com/user-attachments/assets/84ea9b8b-cfb5-4b6c-a264-f07b85416e5d" />
 
-
+111
 <img width="662" height="390" alt="Screenshot 2026-05-13 131015" src="https://github.com/user-attachments/assets/20de97f3-1487-4297-b56f-145a90602eb6" />
+222
 <img width="1124" height="569" alt="Screenshot 2026-05-14 112731" src="https://github.com/user-attachments/assets/7d364fc4-c192-4493-b164-3c39b5a9213c" />
+333
 <img width="707" height="845" alt="Screenshot 2026-05-14 123739" src="https://github.com/user-attachments/assets/7744997f-f7ae-445a-a8c8-073160523072" />
 
 
@@ -275,7 +292,7 @@ It is an ONGOING real-world HANDS-ON achievement, recently in Google Gemini, Gem
 _____________________________________________________
 
 <img width="1510" height="861" alt="Screenshot 2025-02-11 173123" src="https://github.com/user-attachments/assets/98ebc17f-fb53-4ffd-a662-e1b5e6734b37" />
-
+444
 
 _____________________________________________________________
 
@@ -310,7 +327,7 @@ YES!
 It is MATRIX_MATH * -1.
 
 <img width="1510" height="861" alt="Screenshot 2025-02-11 173123" src="https://github.com/user-attachments/assets/98ebc17f-fb53-4ffd-a662-e1b5e6734b37" />
-
+555
 Gemini says, 
 
 "It's the process, methodology, and mechanism, by which the human and AI symbiotically increase their intelligence."
@@ -452,7 +469,7 @@ Traditional language fragility is avoided by simplified supplemental texts calle
 Here it is on display, in this GOOGLE CAPSTONE PROJECT:
 
 <img width="588" height="491" alt="ALPHABITZ_001" src="https://github.com/user-attachments/assets/a116d249-a761-462d-b80b-ad455a1e354f" />
-
+666
 _____________________________________________________________________
 
 
@@ -546,7 +563,7 @@ With these techniques, we can empirically demonstrate, that:
 > Clarity is increased and ambiguity is minimized.
 
 <img width="704" height="489" alt="Screenshot 2026-01-23 090032" src="https://github.com/user-attachments/assets/1c17534b-9aa1-472c-b167-9d4eaf2125f8" />
-
+777
 ____________________________________________
 
 ### KEY_POINT: TRANSFORM words_to_WORDZ
@@ -617,7 +634,7 @@ AXIOMZ are valuable because it enables Human or AI or BOTH - to conduct actual_e
 
 <img width="856" height="668" alt="Screenshot 2025-11-28 173752" src="https://github.com/user-attachments/assets/f6662040-70dc-4805-89d8-ccb13ea4c3b7" />
 
-
+888
 __________________________________________
 
 Another KEY_PROCESS: "NAMERATION"
@@ -632,7 +649,7 @@ Just as the concept of "recoining" is observably absent in our lexical reperatoi
 
 <img width="761" height="493" alt="Screenshot 2026-02-14 071305" src="https://github.com/user-attachments/assets/72474985-ffde-4664-abcd-798251c0559b" />
 
-
+999
 ### One MAJOR AI INNOVATION: "NAMERATE_METASTATE".
 
 #### "NAMERATE_METASTATE" is the process and practice of SEE_EVERY_MISNOMER, and then EXACTIFY it into "BETTER_TEXT" or "BETTER_WORDZ".
@@ -653,7 +670,7 @@ In nature, concepts exist across multiple dimensions. Humans do not contemplate 
 
 
 <img width="426" height="392" alt="Screenshot 2026-02-14 082135" src="https://github.com/user-attachments/assets/26857978-269b-4381-b625-0d68447ac188" />
-
+1111
 
 By PRINCIPLE, "ambiguosity" cannot be reduced when we NAME CONCEPTS after PEOPLE or CATS!
 
@@ -675,7 +692,7 @@ Such principles result in a vast and NOVEL SCIENCE_of_NAMERATION. It is like the
 
 <img width="760" height="482" alt="Screenshot 2026-01-20 081130" src="https://github.com/user-attachments/assets/e6c96035-1e94-466a-a181-b8570d88041d" />
 
-
+2222
 ### ANOTHER MAJOR PRINCIPLE is Human Readability of AI_LANGUAGES.
 
 It is easy to see that LANGUAGE that enables EXTRA_INFERENCE for AI - needs to be Human_Readable - if ever to provide ACCESSIBLITY.
@@ -693,7 +710,7 @@ DECIPHERABILITY resolves significant fragilities in traditional language. Specif
 
 <img width="791" height="492" alt="Screenshot 2026-01-26 193250" src="https://github.com/user-attachments/assets/c2deb542-b944-49c3-ad28-3f0c55cc44d5" />
 
-
+3333
 _______________________________________
 
 ### SIGNIFICANT PARADOX_of_INCOMPLETENESS:
@@ -723,7 +740,7 @@ So amazingly, the clarification of concepts in AI does not require accurate from
 So that is also the PURPOSE of the AXIOM_COLLECTOR thought_experiment (a metacognitvie practice called 'aXPLOREaSTORYa").
 
 <img width="506" height="389" alt="Screenshot 2026-01-23 124114" src="https://github.com/user-attachments/assets/1a1d8a58-c656-49f5-b25f-7c0984a71b28" />
-
+4444
 
 ___________________________________________
 
@@ -747,7 +764,7 @@ Which is where the malady is enabled to CONCEPTUALLY_HEAL_BACK_STRONGER (unbelie
 
 <img width="724" height="490" alt="Screenshot 2026-01-23 124508" src="https://github.com/user-attachments/assets/5179dfb5-9e0a-480c-a223-e92c63b15dba" />
 
-
+555
 __________________________________________
 
 ### KEY CONCEPT: "CONCEPTUAL_ANTI_FRAGILITY"
@@ -770,7 +787,7 @@ In PLAIN_ENGLISH, this can be said in BETTER_WORDZ as a process to "REMEDY_a_MAL
 
 <img width="764" height="473" alt="Screenshot 2026-01-21 202018" src="https://github.com/user-attachments/assets/97beb5d7-d8db-4547-ab38-ee8c0f30a204" />
 
-
+666
 
 ___________________________________________
 
@@ -798,7 +815,7 @@ But AMBIGUOZITY also includes a dramatic study of: CLICHE, IDIOM, ABSTRACT_CONCE
 
 <img width="757" height="802" alt="Screenshot 2026-01-23 124822" src="https://github.com/user-attachments/assets/29849d3c-bd14-4b51-a84c-11867b821e20" />
 
-
+777
 __________________________________________
 
 ### PRIME_DIRECTIVE of EXTRA as "XTRA":
@@ -973,7 +990,7 @@ _____________________________________________________
 
 You can CONCEPTUALLY ZOOM_IN to the METASTATE - of any CONCEPT in the LLM!  
 <img width="1567" height="915" alt="Screenshot 2026-04-30 143611" src="https://github.com/user-attachments/assets/3e67527c-3bec-46a1-a54a-5fcaa6d32e1f" />
-
+888
 _____________________________________________________
 
 ## BUILD NOTES
@@ -1020,7 +1037,7 @@ Each experiment is a separate HTML file, to ISOLATE TOKEN_TARGETS and NOVELTY of
 The AI_LIFECYCLE_OVERLAY manages the LOADING of the LLM, and the subsequent queries.
 
 <img width="498" height="500" alt="Screenshot 2026-05-06 170516" src="https://github.com/user-attachments/assets/992d9217-baab-43c3-aa18-05f640586cf2" />
-
+999
 ___________________________________________
 
  ### TEST_1) "CONCEPTUAL_ACCESSIBILITY" | "ITERATE_METASTATE" | "NAMERATE_METASTATE" | "NAMEROLOGY" | "NAMEIFICATON" | "Nameify" :
@@ -1035,7 +1052,7 @@ ___________________________________________
 
  > The FIRST_LOOK of this project, is input of "Financial" and "Medical" topics - to RENDER SUB_TOPIC_MAPS.
 
-
+000
 <img width="949" height="731" alt="Screenshot 2026-05-06 165755" src="https://github.com/user-attachments/assets/ce90f128-5f39-4653-a36a-0905226885d0" />
 
  #### PURPOSE: to VISUALIZE_METASTATE of any topic in the local LLM!
@@ -1058,7 +1075,7 @@ ___________________________________________
  After CLICK on "CONCEPTUALIZE", the LLM will prompt the TARGET_TOKEN, and ITERATE_METASTATE.
 
  For a COMMA DELIMITED LIST of METASTATE TOPICS.
-
+111
 
 
  <img width="1090" height="559" alt="Screenshot 2026-05-06 171250" src="https://github.com/user-attachments/assets/c99705cc-54c5-4dac-945a-3994777f98e8" />
@@ -1142,53 +1159,68 @@ _______________________________________
  ### TEST_3) "CONCEPTUAL_SPECTROSCOPY" | "MANIFOLD_MORPHOLOGY" | "TOPIC_TOPOLOGY" | "EXACTIFICATION" | "Exactify" :
 
 <img width="856" height="671" alt="Screenshot 2026-04-15 205009" src="https://github.com/user-attachments/assets/f6020fbd-64a2-4540-9b75-1f86e09ea2ce" />
-
+000
  <img width="868" height="435" alt="Screenshot 2026-04-15 193226" src="https://github.com/user-attachments/assets/44518bd0-b27c-4c7a-81ec-4a52649340eb" />
 
-
+111
 <img width="863" height="405" alt="Screenshot 2026-04-15 202245" src="https://github.com/user-attachments/assets/83fbc12d-0789-43e4-905c-e846cd7f87ad" />
-
+222
 <img width="1184" height="529" alt="Screenshot 2026-05-15 193212" src="https://github.com/user-attachments/assets/ce4c436c-19a0-4f5d-8a85-5c79aa732430" />
+333
 <img width="1137" height="910" alt="Screenshot 2026-05-14 105047" src="https://github.com/user-attachments/assets/e9448c9f-f265-4c06-ac85-683000aaae7f" />
+3444
 <img width="1257" height="632" alt="Screenshot 2026-05-13 133705" src="https://github.com/user-attachments/assets/fcd193f1-9eb2-404a-b5d6-b01baef7fe5e" />
+
 <img width="861" height="539" alt="Screenshot 2026-05-13 131232" src="https://github.com/user-attachments/assets/532f4329-0f54-4fe5-b8fc-075d1adb6c46" />
+555
 <img width="662" height="390" alt="Screenshot 2026-05-13 131015" src="https://github.com/user-attachments/assets/4b79d500-ed6a-4d64-bdde-4252819b660a" />
 <img width="864" height="857" alt="Screenshot 2026-05-13 130846" src="https://github.com/user-attachments/assets/d7fed429-ab7f-47c4-9817-bd41c0d0e10d" />
+666
 <img width="1058" height="689" alt="Screenshot 2026-05-13 130030" src="https://github.com/user-attachments/assets/9088e60f-87df-4306-988a-259e4df53f2f" />
 <img width="831" height="507" alt="Screenshot 2026-05-13 130738" src="https://github.com/user-attachments/assets/9ec55dd1-3d26-4c47-b764-3c6adc1b9ee4" />
+777
 <img width="1058" height="689" alt="Screenshot 2026-05-13 130030" src="https://github.com/user-attachments/assets/2754fa90-0b3f-4bf9-975b-be407af81395" />
 <img width="1055" height="584" alt="Screenshot 2026-05-13 125521" src="https://github.com/user-attachments/assets/fe1c55bc-a1ea-4ee1-8be6-d417174982de" />
 <img width="1086" height="595" alt="Screenshot 2026-05-10 205250" src="https://github.com/user-attachments/assets/0ecae623-794a-4d0b-9787-d15624b5345d" />
+888
 <img width="945" height="860" alt="Screenshot 2026-05-10 134241" src="https://github.com/user-attachments/assets/c412e2b2-5498-4914-967e-d4415b498814" />
 <img width="745" height="628" alt="Screenshot 2026-05-09 133004" src="https://github.com/user-attachments/assets/710aa3e3-f0a4-4cfb-803a-e84cf02b942d" />
 <img width="1048" height="853" alt="Screenshot 2026-05-08 234605" src="https://github.com/user-attachments/assets/b5bc1c2f-9ab8-4080-b765-a72a52b2cc0b" />
 <img width="1073" height="849" alt="Screenshot 2026-05-08 234756" src="https://github.com/user-attachments/assets/f0b577f3-5e43-4db7-b4b1-b809f6e7555d" />
+999
 <img width="748" height="841" alt="Screenshot 2026-05-08 163325" src="https://github.com/user-attachments/assets/31d9cbff-6430-4277-a02b-3b11594ed776" />
 <img width="562" height="857" alt="Screenshot 2026-05-08 160448" src="https://github.com/user-attachments/assets/535ba616-9ebd-4a8b-b24b-f1456c1be3ef" />
 <img width="1054" height="858" alt="Screenshot 2026-05-08 135836" src="https://github.com/user-attachments/assets/38bc5e54-8352-48d6-ad84-66fe3ab4009c" />
 <img width="1051" height="867" alt="Screenshot 2026-05-08 114627" src="https://github.com/user-attachments/assets/5e30fe51-71df-493c-935c-0d02bc397379" />
+000
 <img width="1053" height="855" alt="Screenshot 2026-05-08 111904" src="https://github.com/user-attachments/assets/b3219f9c-dcb4-4906-8f10-edaff29a4497" />
 <img width="1862" height="772" alt="Screenshot 2026-05-07 145043" src="https://github.com/user-attachments/assets/5e1f8c45-5874-4a8e-a6e9-db791b368cb5" />
 <img width="450" height="473" alt="Screenshot 2026-05-07 094208" src="https://github.com/user-attachments/assets/cc7a437d-7b15-4263-ad03-9d4489f65866" />
 <img width="1207" height="765" alt="Screenshot 2026-05-06 161556" src="https://github.com/user-attachments/assets/c1acd78e-0a3b-4372-9b6a-8621257299e4" />
+111
 <img width="755" height="889" alt="Screenshot 2026-05-06 134427" src="https://github.com/user-attachments/assets/3072ff27-ced9-4f56-adf9-278e1905be56" />
 <img width="1204" height="723" alt="Screenshot 2026-05-06 155902" src="https://github.com/user-attachments/assets/de2382c5-e8b4-466c-8ef5-e6f3d78ddcb7" />
 <img width="1478" height="903" alt="Screenshot 2026-05-01 111844" src="https://github.com/user-attachments/assets/cd9fc670-a2e6-4c5f-9cb3-a7844fde3d4f" />
 <img width="855" height="559" alt="Screenshot 2026-04-30 113301" src="https://github.com/user-attachments/assets/b8727595-db65-4aaf-9392-c83bcf6731bd" />
 <img width="1908" height="911" alt="Screenshot 2026-04-29 213917" src="https://github.com/user-attachments/assets/e7d6cfb4-20d3-49d4-b345-acf11825d9f7" />
+222
 <img width="992" height="691" alt="Screenshot 2026-04-29 133139" src="https://github.com/user-attachments/assets/4c2f0bdd-86fe-4301-bd23-70bf2447f930" />
 <img width="912" height="812" alt="Screenshot 2026-04-20 175724" src="https://github.com/user-attachments/assets/4b7c5ec1-2a8a-4516-bf50-025e24b2055c" />
 <img width="509" height="447" alt="Screenshot 2026-05-08 182925" src="https://github.com/user-attachments/assets/08d204b2-c77b-4c3b-acc8-240815ef1fb1" />
 <img width="707" height="845" alt="Screenshot 2026-05-14 123739" src="https://github.com/user-attachments/assets/be5d87d3-dcfb-4c14-98f1-0735d160db81" />
+333
 <img width="789" height="852" alt="Screenshot 2026-05-13 124110" src="https://github.com/user-attachments/assets/75f404bd-6b6c-49e0-9f85-6e6cfcd77e0f" />
 <img width="927" height="859" alt="Screenshot 2026-05-10 095757" src="https://github.com/user-attachments/assets/cd83105d-d1e4-4715-a49e-8d7f6582fd21" />
 <img width="776" height="565" alt="Screenshot 2026-05-10 133252" src="https://github.com/user-attachments/assets/583b20dd-15e3-41fc-8ec0-a55058aee988" />
 <img width="758" height="628" alt="Screenshot 2026-04-21 173513" src="https://github.com/user-attachments/assets/dbe7171a-0c73-4581-83bb-4083124c3d89" />
 <img width="786" height="716" alt="Screenshot 2026-04-23 184416" src="https://github.com/user-attachments/assets/a7d57276-d08c-41cd-b054-9fd1b63d70c6" />
+
+444
 <img width="1104" height="796" alt="Screenshot 2026-04-28 205908" src="https://github.com/user-attachments/assets/f6a279e9-bc0f-4b5c-bcf2-2dd933de47eb" />
 <img width="1098" height="789" alt="Screenshot 2026-04-29 133026" src="https://github.com/user-attachments/assets/f7cef642-3831-43bc-9810-68adc43fda42" />
 <img width="1090" height="704" alt="Screenshot 2026-04-30 115044" src="https://github.com/user-attachments/assets/c7645710-85c5-4342-9fe5-82cdadd1c44d" />
 <img width="862" height="645" alt="Screenshot 2026-04-15 205054" src="https://github.com/user-attachments/assets/f94b5504-b751-4cdb-8fb4-03face378f66" />
+555
 <img width="862" height="626" alt="Screenshot 2026-04-15 205032" src="https://github.com/user-attachments/assets/4aa29f53-9c46-416a-963f-460fcbadfd15" />
 <img width="856" height="671" alt="Screenshot 2026-04-15 205009" src="https://github.com/user-attachments/assets/47a4ec2e-5697-43a6-b169-125e246d5d18" />
 
