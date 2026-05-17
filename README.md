@@ -21,7 +21,7 @@ _______________________________________________________
 
 <img width="1055" height="584" alt="Screenshot 2026-05-13 125521" src="https://github.com/user-attachments/assets/14757b91-111d-4671-b32d-6d72482b6963" />
 
-Explore 3 INNOVATIVE MODALITIES of AI VISUALIZATION for "CONCEPTUAL_ACCESSIBILITY"! 
+Explore 3 INNOVATIVE MODALITIES of AI VISUALIZATION for "CONCEPTUAL_ACCESSIBILITY" and "CONCEPTUAL_SPECTROSCOPY"! 
 
 > See CONCEPTS VIVIDLY - with intuitive & scalable 3D TOOLS!
 __________________________________________________
