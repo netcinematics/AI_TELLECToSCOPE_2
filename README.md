@@ -1,7 +1,7 @@
 
 
 
-## "3D_CONCEPTUALIZER"! 
+## "AI_CONCEPTUALIZER"! 
 
 - CONCEPTUAL VISUALIZATION of GEMMA LATENT SPACE with MECHANISTIC INTERPRETABILITY.
 
@@ -9,9 +9,9 @@
 
 > See 3 open-source AI VISUALIZATION MODALITIES - to showcase GEMMA "extra_abilities"!
 
-GITHUB: https://github.com/netcinematics/AI_CONCEPTUALIZER
+GITHUB: https://github.com/netcinematics/AI_CONCEPTUALIZER_1
 
-YOUTUBE: "AI_CREATIVE_DEV" [https://www.youtube.com/@spazefalcon2794](https://www.youtube.com/watch?v=eOymKE7O9fI)
+YOUTUBE: "AI_CREATIVE_DEV" https://www.youtube.com/watch?v=eOymKE7O9fI
 
 _______________________________________________________
 
