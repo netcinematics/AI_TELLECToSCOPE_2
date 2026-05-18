@@ -11,7 +11,7 @@
 
 GITHUB: https://github.com/netcinematics/AI_CONCEPTUALIZER
 
-YOUTUBE: "AI_CREATIVE_DEV" https://www.youtube.com/@spazefalcon2794
+YOUTUBE: "AI_CREATIVE_DEV" [https://www.youtube.com/@spazefalcon2794](https://www.youtube.com/watch?v=eOymKE7O9fI)
 
 _______________________________________________________
 
